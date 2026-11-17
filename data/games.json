@@ -1,0 +1,177 @@
+{
+  "$comment": "東方Project原作STG（整数作品）の作品・機体・難易度マスタ。各ツールへは scripts/sync_data.py で埋め込む。",
+  "difficultyNames": {
+    "E": "Easy",
+    "N": "Normal",
+    "H": "Hard",
+    "L": "Lunatic",
+    "Ex": "Extra",
+    "Ph": "Phantasm"
+  },
+  "games": [
+    {
+      "id": "th06",
+      "no": "06",
+      "title": "東方紅魔郷",
+      "titleEn": "the Embodiment of Scarlet Devil",
+      "year": 2002,
+      "hue": 352,
+      "difficulties": ["E", "N", "H", "L", "Ex"],
+      "shots": ["霊夢A", "霊夢B", "魔理沙A", "魔理沙B"]
+    },
+    {
+      "id": "th07",
+      "no": "07",
+      "title": "東方妖々夢",
+      "titleEn": "Perfect Cherry Blossom",
+      "year": 2003,
+      "hue": 328,
+      "difficulties": ["E", "N", "H", "L", "Ex", "Ph"],
+      "shots": ["霊夢A", "霊夢B", "魔理沙A", "魔理沙B", "咲夜A", "咲夜B"]
+    },
+    {
+      "id": "th08",
+      "no": "08",
+      "title": "東方永夜抄",
+      "titleEn": "Imperishable Night",
+      "year": 2004,
+      "hue": 236,
+      "difficulties": ["E", "N", "H", "L", "Ex"],
+      "shots": ["結界組", "詠唱組", "紅魔組", "幽冥組", "霊夢", "紫", "魔理沙", "アリス", "咲夜", "レミリア", "妖夢", "幽々子"],
+      "flags": ["Final A", "Final B"]
+    },
+    {
+      "id": "th09",
+      "no": "09",
+      "title": "東方花映塚",
+      "titleEn": "Phantasmagoria of Flower View",
+      "year": 2005,
+      "hue": 88,
+      "difficulties": ["E", "N", "H", "L", "Ex"],
+      "shots": ["霊夢", "魔理沙", "咲夜", "妖夢", "鈴仙", "チルノ", "リリカ", "メルラン", "ルナサ", "ミスティア", "てゐ", "文", "メディスン", "幽香", "小町", "映姫"]
+    },
+    {
+      "id": "th10",
+      "no": "10",
+      "title": "東方風神録",
+      "titleEn": "Mountain of Faith",
+      "year": 2007,
+      "hue": 18,
+      "difficulties": ["E", "N", "H", "L", "Ex"],
+      "shots": ["霊夢A", "霊夢B", "霊夢C", "魔理沙A", "魔理沙B", "魔理沙C"]
+    },
+    {
+      "id": "th11",
+      "no": "11",
+      "title": "東方地霊殿",
+      "titleEn": "Subterranean Animism",
+      "year": 2008,
+      "hue": 28,
+      "difficulties": ["E", "N", "H", "L", "Ex"],
+      "shots": ["霊夢×紫", "霊夢×萃香", "霊夢×文", "魔理沙×アリス", "魔理沙×パチュリー", "魔理沙×にとり"]
+    },
+    {
+      "id": "th12",
+      "no": "12",
+      "title": "東方星蓮船",
+      "titleEn": "Undefined Fantastic Object",
+      "year": 2009,
+      "hue": 200,
+      "difficulties": ["E", "N", "H", "L", "Ex"],
+      "shots": ["霊夢A", "霊夢B", "魔理沙A", "魔理沙B", "早苗A", "早苗B"]
+    },
+    {
+      "id": "th13",
+      "no": "13",
+      "title": "東方神霊廟",
+      "titleEn": "Ten Desires",
+      "year": 2011,
+      "hue": 276,
+      "difficulties": ["E", "N", "H", "L", "Ex"],
+      "shots": ["霊夢", "魔理沙", "早苗", "妖夢"]
+    },
+    {
+      "id": "th14",
+      "no": "14",
+      "title": "東方輝針城",
+      "titleEn": "Double Dealing Character",
+      "year": 2013,
+      "hue": 44,
+      "difficulties": ["E", "N", "H", "L", "Ex"],
+      "shots": ["霊夢A", "霊夢B", "魔理沙A", "魔理沙B", "咲夜A", "咲夜B"]
+    },
+    {
+      "id": "th15",
+      "no": "15",
+      "title": "東方紺珠伝",
+      "titleEn": "Legacy of Lunatic Kingdom",
+      "year": 2015,
+      "hue": 216,
+      "difficulties": ["E", "N", "H", "L", "Ex"],
+      "shots": ["霊夢", "魔理沙", "早苗", "鈴仙"],
+      "flags": ["完全無欠モード"]
+    },
+    {
+      "id": "th16",
+      "no": "16",
+      "title": "東方天空璋",
+      "titleEn": "Hidden Star in Four Seasons",
+      "year": 2017,
+      "hue": 162,
+      "difficulties": ["E", "N", "H", "L", "Ex"],
+      "shots": ["霊夢(春)", "霊夢(夏)", "霊夢(秋)", "霊夢(冬)", "チルノ(春)", "チルノ(夏)", "チルノ(秋)", "チルノ(冬)", "文(春)", "文(夏)", "文(秋)", "文(冬)", "魔理沙(春)", "魔理沙(夏)", "魔理沙(秋)", "魔理沙(冬)"],
+      "exShots": ["霊夢(土用)", "チルノ(土用)", "文(土用)", "魔理沙(土用)"]
+    },
+    {
+      "id": "th17",
+      "no": "17",
+      "title": "東方鬼形獣",
+      "titleEn": "Wily Beast and Weakest Creature",
+      "year": 2019,
+      "hue": 128,
+      "difficulties": ["E", "N", "H", "L", "Ex"],
+      "shots": ["霊夢(狼)", "霊夢(獺)", "霊夢(鷲)", "魔理沙(狼)", "魔理沙(獺)", "魔理沙(鷲)", "妖夢(狼)", "妖夢(獺)", "妖夢(鷲)"]
+    },
+    {
+      "id": "th18",
+      "no": "18",
+      "title": "東方虹龍洞",
+      "titleEn": "Unconnected Marketeers",
+      "year": 2021,
+      "hue": 300,
+      "difficulties": ["E", "N", "H", "L", "Ex"],
+      "shots": ["霊夢", "魔理沙", "咲夜", "早苗"]
+    },
+    {
+      "id": "th19",
+      "no": "19",
+      "title": "東方獣王園",
+      "titleEn": "Unfinished Dream of All Living Ghost",
+      "year": 2023,
+      "hue": 176,
+      "difficulties": ["E", "N", "H", "L", "Ex"],
+      "shots": ["霊夢", "魔理沙", "早苗", "藍", "あうん", "ナズーリン", "清蘭", "燐", "典", "マミゾウ", "八千慧", "早鬼", "尤魔", "萃香", "美天", "慧ノ子", "ちやり", "日狭美", "残無"]
+    },
+    {
+      "id": "th20",
+      "no": "20",
+      "title": "東方錦上京",
+      "titleEn": "Fossilized Wonders",
+      "year": 2025,
+      "hue": 36,
+      "difficulties": ["E", "N", "H", "L", "Ex"],
+      "shots": ["霊夢", "魔理沙"]
+    },
+    {
+      "id": "nc06",
+      "no": "NC",
+      "title": "東方紅魔郷:New Classic",
+      "titleEn": "リメイク版(New Classic版)",
+      "year": 2026,
+      "remakeOf": "th06",
+      "hue": 4,
+      "difficulties": ["E", "N", "H", "L", "Ex"],
+      "shots": ["霊夢A", "霊夢B", "魔理沙A", "魔理沙B"]
+    }
+  ]
+}

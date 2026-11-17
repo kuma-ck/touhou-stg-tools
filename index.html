@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>touhou-stg-tools</title>
+<meta name="description" content="東方Project原作STGのやり込みを支える非公式ファンツール集。クリア表、ちょん避けシミュレーター、ボムルート構築。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+2:wght@400;500;700;800&family=Outfit:wght@500;600;700;800&display=swap">
+<style>
+/* Layout: single column — title block, then one card per tool (status chip shows whether it is usable yet) */
+:root{
+  --bg:#f3f4f9; --surface:#ffffff; --surface-2:#eceef6; --ink:#10131f; --muted:#666d86; --line:#e1e4ee; --accent:#5856ef;
+  --shadow:0 1px 2px rgba(16,19,31,.05),0 10px 28px -16px rgba(16,19,31,.18);
+  --f-ui:"M PLUS 2","Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+  --f-num:"Outfit","M PLUS 2",system-ui,sans-serif;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0a0b11; --surface:#13151e; --surface-2:#1c1f2c; --ink:#eceef7; --muted:#8b91a9; --line:#252a3a; --accent:#8a89ff;
+  --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 12px 32px -18px rgba(0,0,0,.7); color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+.eyebrow{font-family:var(--f-num);font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{margin:4px 0 8px;font-family:var(--f-num);font-size:2.1rem;font-weight:800;letter-spacing:-.01em;line-height:1.15}
+.lead{margin:0;color:var(--muted);max-width:36em}
+.tools{display:grid;gap:12px}
+.tool{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:start;padding:18px 20px;border-radius:20px;background:var(--surface);box-shadow:var(--shadow);color:inherit;text-decoration:none}
+a.tool:hover{outline:2px solid var(--accent);outline-offset:0}
+a.tool:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tool h2{margin:0;font-size:1.1rem;font-weight:800}
+.tool p{margin:0;grid-column:1/-1;font-size:.88rem;color:var(--muted)}
+.chip{font-family:var(--f-num);font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.chip.live{background:var(--accent);color:#fff}
+footer{font-size:.75rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+footer a{color:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Touhou Project · Fan-made tools</div>
+    <h1>touhou-stg-tools</h1>
+    <p class="lead">東方Project原作STGのやり込みを支えるツール集です。クリア状況の記録、避けの練習、ボムを使う場所の計画を、ブラウザだけで行えます。</p>
+  </header>
+  <main class="tools">
+    <a class="tool" href="clear-tracker/">
+      <h2>東方クリア表</h2><span class="chip live">公開中</span>
+      <p>機体×難易度ごとに、クリア・ノーコン・ノーボム・ノーミスを記録します。達成日とメモ、バックアップとCSV書き出しに対応しています。</p>
+    </a>
+    <div class="tool">
+      <h2>ちょん避けシミュレーター</h2><span class="chip">準備中</span>
+      <p>自機狙い弾を少しずつ動いてかわす「ちょん避け」を、速度や判定の大きさを変えながら練習できるようにする予定です。</p>
+    </div>
+    <div class="tool">
+      <h2>ボムルート構築</h2><span class="chip">準備中</span>
+      <p>ステージのどこでボムを使うかを計画し、残機・ボムの収支を確かめられるようにする予定です。</p>
+    </div>
+  </main>
+  <footer>東方Projectの二次創作による非公式ファンツールです。上海アリス幻樂団とは関係ありません。<br>ソースコード: <a href="https://github.com/kuma-ck/touhou-stg-tools">kuma-ck/touhou-stg-tools</a>（MIT License）</footer>
+</div>
+</body>
+</html>
