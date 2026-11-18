@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>デザインの見本</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!-- design:begin -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+2:wght@400;500;700;800&family=Outfit:wght@500;600;700;800&display=swap">
+<style id="design">
+/* ==========================================================================
+   デザイントークン（全ツール共通の値）
+   ここが正。各ツールの HTML へは scripts/sync_data.py で埋め込む。
+   ライトの値を :root に、ダークの値を @media のブロックに書く。
+   明示的に data-theme="dark" を選んだとき用の同じブロックは sync_data.py が作る。
+   ========================================================================== */
+:root{
+  /* 面と文字 */
+  --bg:#f3f4f9;          /* ページの地 */
+  --surface:#ffffff;     /* カードの面 */
+  --surface-2:#eceef6;   /* カードの中の一段沈んだ面（ボタン、入力欄、未記録のマス） */
+  --ink:#10131f;         /* 本文 */
+  --muted:#666d86;       /* 補足・ラベル */
+  --line:#e1e4ee;        /* 区切り線 */
+
+  /* アクセント（主ボタン、選択中、フォーカス枠） */
+  --accent:#5856ef;
+  --accent-ink:#ffffff;  /* アクセントの上に載せる文字 */
+
+  /* 状態（保存済み・処理中・エラー）。アクセントとは別に使う */
+  --ok:#1a9e6a; --warn:#d99512; --err:#d94444;
+
+  /* 達成段階: クリア < ノーコン < NB/NM < NMNB */
+  --t1:#dde1f1; --t1-fg:#38405f;   /* クリア */
+  --t2:#5856ef;                     /* ノーコン */
+  --t3:#cf3f9c;                     /* NB / NM */
+  --t4a:#f6b443; --t4b:#ee6a3a; --t4-fg:#2a1405;  /* NMNB（グラデーション） */
+  --on:#ffffff;                     /* t2・t3 の上の文字 */
+
+  /* 作品のテーマ色: hsl(var(--h) var(--sat) var(--lit))。--h は games.json の hue */
+  --sat:70%; --lit:54%;
+  --ring-track:#e5e7f1;  /* 進捗リングの未達部分 */
+
+  /* 影と幕 */
+  --shadow:0 1px 2px rgba(16,19,31,.05),0 10px 28px -16px rgba(16,19,31,.18);
+  --scrim:rgba(10,12,20,.42);
+
+  /* 書体: 和文と UI は M PLUS 2、数字と英字の見出しは Outfit */
+  --f-ui:"M PLUS 2","Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+  --f-num:"Outfit","M PLUS 2",system-ui,sans-serif;
+
+  /* 文字サイズ（本文は 15px） */
+  --fs-xs:.72rem;   /* 注記、凡例、チップ */
+  --fs-sm:.8rem;    /* 補足文 */
+  --fs-md:.88rem;   /* ボタン、小さめの本文 */
+  --fs-lg:1.1rem;   /* カードの見出し */
+  --fs-xl:1.45rem;  /* 大きな数値 */
+  --fs-2xl:1.9rem;  /* ページの見出し */
+
+  /* 余白（4px 刻み） */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:28px; --sp-7:40px;
+
+  /* 角丸 */
+  --r-sm:10px;      /* 小さな部品の中の選択肢 */
+  --r-md:14px;      /* 入力欄、お知らせ */
+  --r-lg:20px;      /* カード */
+  --r-full:999px;   /* ボタン、チップ */
+
+  /* 動き */
+  --ease-out:cubic-bezier(.2,.8,.2,1);
+  --dur-fast:.15s;
+
+  /* ページ幅 */
+  --wrap-w:820px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0a0b11; --surface:#13151e; --surface-2:#1c1f2c; --ink:#eceef7; --muted:#8b91a9; --line:#252a3a;
+  --accent:#8a89ff; --accent-ink:#0a0b11;
+  --ok:#36c48a; --warn:#f0b33a; --err:#f06464;
+  --t1:#2a2f46; --t1-fg:#d0d5ef; --t2:#6866ff; --t3:#de56b0; --t4a:#f7bd55; --t4b:#f07b46; --t4-fg:#2a1405; --on:#ffffff;
+  --sat:72%; --lit:62%; --ring-track:#232739;
+  --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 12px 32px -18px rgba(0,0,0,.7);
+  --scrim:rgba(0,0,0,.6);
+  color-scheme:dark;
+}}
+
+:root[data-theme="dark"]{
+  --bg:#0a0b11; --surface:#13151e; --surface-2:#1c1f2c; --ink:#eceef7; --muted:#8b91a9; --line:#252a3a;
+  --accent:#8a89ff; --accent-ink:#0a0b11;
+  --ok:#36c48a; --warn:#f0b33a; --err:#f06464;
+  --t1:#2a2f46; --t1-fg:#d0d5ef; --t2:#6866ff; --t3:#de56b0; --t4a:#f7bd55; --t4b:#f07b46; --t4-fg:#2a1405; --on:#ffffff;
+  --sat:72%; --lit:62%; --ring-track:#232739;
+  --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 12px 32px -18px rgba(0,0,0,.7);
+  --scrim:rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+
+/* ==========================================================================
+   共通の部品（tokens.css の値だけを使う）
+   ツール固有の見た目は各ツールの <style> に書く。ここより後に書くので上書きできる。
+   ========================================================================== */
+
+/* 土台 */
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.6;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+.wrap{max-width:var(--wrap-w);margin:0 auto;padding-block:var(--sp-5) var(--sp-7);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:var(--sp-5)}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font-size:var(--fs-2xl);font-weight:800;letter-spacing:-.01em;line-height:1.2}
+h2{font-size:1rem;font-weight:800;letter-spacing:.01em}
+.eyebrow{font-family:var(--f-num);font-size:var(--fs-xs);font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:disabled{cursor:default;opacity:.55}
+:is(button,a,input,textarea,select):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* カード: 面を分けたいものだけに使う */
+.card{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+
+/* ボタン */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:var(--sp-2) var(--sp-4);border-radius:var(--r-full);background:var(--surface-2);font-weight:700;font-size:var(--fs-md);text-decoration:none;color:var(--ink)}
+.btn:hover:not(:disabled){filter:brightness(.97)}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.danger{background:transparent;color:var(--err);padding-inline:6px}
+
+/* チップ: 短いラベル（公開中、達成段階など） */
+.chip{display:inline-block;font-family:var(--f-num);font-size:var(--fs-xs);font-weight:700;line-height:1.6;padding:3px 10px;border-radius:var(--r-full);background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.chip.accent{background:var(--accent);color:var(--accent-ink)}
+
+/* 状態表示: data-k に ok / busy / err */
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:var(--r-full);background:var(--surface);box-shadow:var(--shadow);font-size:.76rem;color:var(--muted);white-space:nowrap}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.pill[data-k="ok"] i{background:var(--ok)}
+.pill[data-k="busy"] i{background:var(--warn)}
+.pill[data-k="err"] i{background:var(--err)}
+
+/* お知らせ */
+.notice{background:var(--surface-2);border-radius:var(--r-md);padding:10px 14px;font-size:.85rem}
+
+/* 入力欄 */
+.field{display:flex;flex-direction:column}
+.field input,.field textarea,.field select{font:inherit;font-size:16px;color:var(--ink);background:var(--surface-2);border:1px solid transparent;border-radius:var(--r-md);padding:10px 12px;width:100%}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);outline:none}
+.field textarea{min-height:72px;resize:vertical}
+.lbl{font-size:.74rem;font-weight:700;color:var(--muted);letter-spacing:.04em;margin-bottom:6px}
+
+/* 切り替え（どれか 1 つを選ぶ）: button[role=radio][aria-checked] を並べる */
+.seg{display:grid;grid-auto-columns:minmax(0,1fr);grid-auto-flow:column;background:var(--surface-2);border-radius:var(--r-md);padding:var(--sp-1);gap:var(--sp-1)}
+.seg button{min-height:42px;border-radius:var(--r-sm);font-weight:700;font-size:.9rem;color:var(--muted)}
+.seg button[aria-checked="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+
+/* オン/オフ（いくつでも選べる）: button[aria-pressed] の中に .ck */
+.togs{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.tog{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:42px;padding:8px 14px 8px 10px;border-radius:var(--r-full);background:var(--surface-2);font-weight:700;font-size:var(--fs-md)}
+.tog .ck{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;flex:none}
+.tog .ck svg{width:12px;height:12px;opacity:0}
+.tog[aria-pressed="true"] .ck{border-color:transparent;background:var(--accent);color:var(--accent-ink)}
+.tog[aria-pressed="true"] .ck svg{opacity:1}
+
+/* 進捗リング: --p に 0〜100、--c に色、--sz に大きさ、--th に太さ */
+.ring{--p:0;--c:var(--accent);flex:none;width:var(--sz,56px);height:var(--sz,56px);border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--c) calc(var(--p)*1%),var(--ring-track) 0)}
+.ring>span{width:calc(100% - var(--th,8px));height:calc(100% - var(--th,8px));border-radius:50%;background:var(--surface);display:grid;place-items:center;font-family:var(--f-num);font-weight:700;line-height:1}
+
+/* ページ末尾の注記（二次創作の表記を必ず入れる） */
+.foot{font-size:var(--fs-xs);color:var(--muted);line-height:1.7;padding-top:var(--sp-3);border-top:1px solid var(--line)}
+.foot a{color:inherit}
+</style>
+<!-- design:end -->
+<style>
+/* Layout: single column reference sheet — one section per token group, then the shared components shown live */
+/* 共通のトークンと部品は上の design 区間（design/*.css）。ここには見本ページ固有のものだけを書く */
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--sp-3) var(--sp-4);flex-wrap:wrap}
+.lead{margin:var(--sp-2) 0 0;color:var(--muted);max-width:38em}
+.theme{min-width:min(100%,280px)}
+.sec{display:flex;flex-direction:column;gap:var(--sp-3)}
+.sec>p{margin:0;font-size:var(--fs-sm);color:var(--muted);max-width:40em}
+code{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:.86em;background:var(--surface-2);padding:1px 6px;border-radius:6px}
+.group{padding:var(--sp-4) 18px;display:flex;flex-direction:column;gap:var(--sp-3)}
+.group h3{font-size:var(--fs-sm);font-weight:700;color:var(--muted)}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:var(--sp-3)}
+.sw{display:flex;flex-direction:column;gap:6px;min-width:0}
+.sw .chipcolor{height:52px;border-radius:var(--r-md);box-shadow:inset 0 0 0 1px var(--line)}
+.sw b{font-family:var(--f-num);font-size:var(--fs-sm);font-weight:600}
+.sw span{font-size:var(--fs-xs);color:var(--muted);line-height:1.5}
+.sw .hex{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.hues{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:var(--sp-3)}
+.hue{display:flex;align-items:center;gap:10px;min-width:0}
+.hue .ring{--sz:40px;--th:7px;--p:72;--c:hsl(var(--h) var(--sat) var(--lit))}
+.hue .ring>span{font-size:.72rem;color:hsl(var(--h) var(--sat) var(--lit))}
+.hue div{min-width:0;font-size:var(--fs-xs);line-height:1.4}
+.hue div b{display:block;font-size:var(--fs-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scale{display:flex;flex-direction:column}
+.scale>div{display:grid;grid-template-columns:7.5rem minmax(0,1fr);gap:var(--sp-3);align-items:baseline;padding:10px 0}
+.scale>div+div{border-top:1px solid var(--line)}
+.scale code{justify-self:start}
+.scale p{margin:0;min-width:0;overflow-wrap:anywhere}
+.space{display:flex;flex-direction:column;gap:var(--sp-2)}
+.space>div{display:grid;grid-template-columns:7.5rem 3rem minmax(0,1fr);gap:var(--sp-3);align-items:center;font-size:var(--fs-xs);color:var(--muted)}
+.space i{display:block;height:12px;border-radius:3px;background:var(--accent)}
+.radii{display:flex;flex-wrap:wrap;gap:var(--sp-4)}
+.radii>div{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:var(--fs-xs);color:var(--muted)}
+.radii i{display:block;width:72px;height:56px;background:var(--surface-2);border:2px solid var(--accent)}
+.demo{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
+.t1{background:var(--t1);color:var(--t1-fg)}
+.t2{background:var(--t2);color:var(--on)}
+.t3{background:var(--t3);color:var(--on)}
+.t4{background:linear-gradient(135deg,var(--t4a),var(--t4b));color:var(--t4-fg)}
+.rules{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px;font-size:var(--fs-md)}
+pre{margin:0;overflow-x:auto;background:var(--surface-2);border-radius:var(--r-md);padding:var(--sp-3) 14px;font-size:.8rem;line-height:1.6}
+pre code{background:none;padding:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="eyebrow">touhou-stg-tools · デザインシステム</div>
+      <h1>デザインの見本</h1>
+      <p class="lead">全ツールで使う色・文字・余白（デザイントークン）と、ボタンやカードなどの部品の見本です。値は <code>design/</code> のファイルが正で、各ツールには <code>scripts/sync_data.py</code> で埋め込みます。</p>
+    </div>
+    <div class="theme">
+      <div class="lbl" id="themeLbl">表示</div>
+      <div class="seg" role="radiogroup" aria-labelledby="themeLbl" id="theme">
+        <button type="button" role="radio" aria-checked="true" data-t="">自動</button>
+        <button type="button" role="radio" aria-checked="false" data-t="light">ライト</button>
+        <button type="button" role="radio" aria-checked="false" data-t="dark">ダーク</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="sec">
+    <h2>色</h2>
+    <p>色は必ずトークン（<code>var(--accent)</code> など）で指定し、<code>#5856ef</code> のような値を直接書かないでください。トークンを使えば、ライトとダークの切り替えも自動で効きます。</p>
+    <div id="colors" class="sec"></div>
+  </section>
+
+  <section class="sec">
+    <h2>作品のテーマ色</h2>
+    <p><code>data/games.json</code> の <code>hue</code>（色相）から <code>hsl(var(--h) var(--sat) var(--lit))</code> で作ります。彩度と明度はトークンなので、ダークでは少し明るくなります。</p>
+    <div class="card group"><div class="hues" id="hues"></div></div>
+  </section>
+
+  <section class="sec">
+    <h2>文字</h2>
+    <p>和文と UI は M PLUS 2（<code>--f-ui</code>）、数字と英字の見出しは Outfit（<code>--f-num</code>）。本文は 15px で、大きさは下の段階から選びます。</p>
+    <div class="card group">
+      <div class="scale">
+        <div><code>--fs-2xl</code><p style="font-size:var(--fs-2xl);font-weight:800;line-height:1.2">東方クリア表</p></div>
+        <div><code>--fs-xl</code><p class="num" style="font-size:var(--fs-xl);font-weight:700">72<small class="muted" style="font-size:.75rem"> / 304</small></p></div>
+        <div><code>--fs-lg</code><p style="font-size:var(--fs-lg);font-weight:800">ちょん避けシミュレーター</p></div>
+        <div><code>本文 15px</code><p>魔理沙B で Lunatic をノーコンクリア。6面のスペルで 2 回ボムを使った。</p></div>
+        <div><code>--fs-md</code><p style="font-size:var(--fs-md)">バックアップを保存</p></div>
+        <div><code>--fs-sm</code><p style="font-size:var(--fs-sm);color:var(--muted)">リングはノーコン以上の割合</p></div>
+        <div><code>--fs-xs</code><p style="font-size:var(--fs-xs);color:var(--muted)">東方Projectの二次創作による非公式ファンツールです。</p></div>
+        <div><code>.eyebrow</code><p class="eyebrow">Touhou Project</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>余白と角丸</h2>
+    <p>余白は 4px 刻みの段階（<code>--sp-1</code>〜<code>--sp-7</code>）から選びます。角丸は部品の大きさで決めます。</p>
+    <div class="card group">
+      <h3>余白</h3>
+      <div class="space" id="space"></div>
+      <h3>角丸</h3>
+      <div class="radii">
+        <div><i style="border-radius:var(--r-sm)"></i><code>--r-sm</code>選択肢</div>
+        <div><i style="border-radius:var(--r-md)"></i><code>--r-md</code>入力欄</div>
+        <div><i style="border-radius:var(--r-lg)"></i><code>--r-lg</code>カード</div>
+        <div><i style="border-radius:var(--r-full)"></i><code>--r-full</code>ボタン</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>部品</h2>
+    <p>ここにある部品は <code>design/components.css</code> にあり、どのツールでも同じクラス名で使えます。</p>
+    <div class="card group">
+      <h3>ボタン <code>.btn</code></h3>
+      <div class="demo">
+        <button type="button" class="btn primary">置き換える</button>
+        <button type="button" class="btn">やめる</button>
+        <button type="button" class="btn danger">この作品の記録を消す</button>
+        <button type="button" class="btn" disabled>保存中</button>
+      </div>
+    </div>
+    <div class="card group">
+      <h3>チップ <code>.chip</code>／状態表示 <code>.pill</code></h3>
+      <div class="demo">
+        <span class="chip accent">公開中</span><span class="chip">準備中</span>
+        <span class="chip t1">Clear</span><span class="chip t2">1cc</span><span class="chip t3">NB</span><span class="chip t4">NMNB</span>
+      </div>
+      <div class="demo">
+        <span class="pill" data-k="ok"><i></i><span>保存済み</span></span>
+        <span class="pill" data-k="busy"><i></i><span>保存中</span></span>
+        <span class="pill" data-k="err"><i></i><span>保存に失敗</span></span>
+      </div>
+    </div>
+    <div class="card group">
+      <h3>お知らせ <code>.notice</code></h3>
+      <div class="notice">記録はこのブラウザに保存されます。他の端末とは同期しないので、移すときは「バックアップを保存」を使ってください。</div>
+    </div>
+    <div class="card group">
+      <h3>入力 <code>.field</code>・切り替え <code>.seg</code>・オン/オフ <code>.tog</code></h3>
+      <div class="field"><label class="lbl" for="demoDate">達成日</label><input id="demoDate" type="date" value="2026-11-18"></div>
+      <div class="field"><label class="lbl" for="demoNote">メモ</label><textarea id="demoNote">最終スペルは決めボム。</textarea></div>
+      <div>
+        <div class="lbl" id="segLbl">結果</div>
+        <div class="seg" role="radiogroup" aria-labelledby="segLbl" id="demoSeg">
+          <button type="button" role="radio" aria-checked="false">未</button>
+          <button type="button" role="radio" aria-checked="false">クリア</button>
+          <button type="button" role="radio" aria-checked="true">ノーコン</button>
+        </div>
+      </div>
+      <div class="togs" id="demoTogs">
+        <button type="button" class="tog" aria-pressed="true"><span class="ck"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.3 5 8.6 9.6 3.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>ノーボム</button>
+        <button type="button" class="tog" aria-pressed="false"><span class="ck"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.3 5 8.6 9.6 3.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>ノーミス</button>
+      </div>
+    </div>
+    <div class="card group">
+      <h3>進捗リング <code>.ring</code></h3>
+      <div class="demo">
+        <div class="ring" style="--p:24"><span class="num" style="font-size:.9rem">24%</span></div>
+        <div class="ring" style="--p:68;--sz:72px;--th:11px"><span class="num">68%</span></div>
+        <div class="ring" style="--p:100;--sz:96px;--th:14px;--c:var(--ok)"><span class="num" style="font-size:1.3rem">100%</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>新しいツールを作るとき</h2>
+    <div class="card group">
+      <ol class="rules">
+        <li><code>&lt;head&gt;</code> に下の 2 行を置き、その後ろに自分の <code>&lt;style&gt;</code> を書く。</li>
+        <li><code>scripts/sync_data.py</code> の <code>DESIGN_TARGETS</code> に HTML を足して実行する。</li>
+        <li>色・文字サイズ・余白・角丸はトークンを使う。足りない値は、まず <code>design/tokens.css</code> に足せないか考える。</li>
+        <li>ページの最後に <code>.foot</code> で二次創作の表記を入れる。</li>
+      </ol>
+      <pre><code>&lt;!-- design:begin --&gt;
+&lt;!-- design:end --&gt;</code></pre>
+    </div>
+  </section>
+
+  <footer class="foot">東方Projectの二次創作による非公式ファンツールです。上海アリス幻樂団とは関係ありません。<br>ソースコード: <a href="https://github.com/kuma-ck/touhou-stg-tools" target="_blank" rel="noopener">kuma-ck/touhou-stg-tools</a> · <a href="../">ツール一覧へ</a></footer>
+</div>
+
+<!-- data:games:begin -->
+<script type="application/json" id="data-games">{"$comment":"東方Project原作STG（整数作品）の作品・機体・難易度マスタ。各ツールへは scripts/sync_data.py で埋め込む。","difficultyNames":{"E":"Easy","N":"Normal","H":"Hard","L":"Lunatic","Ex":"Extra","Ph":"Phantasm"},"games":[{"id":"th06","no":"06","title":"東方紅魔郷","titleEn":"the Embodiment of Scarlet Devil","year":2002,"hue":352,"difficulties":["E","N","H","L","Ex"],"shots":["霊夢A","霊夢B","魔理沙A","魔理沙B"]},{"id":"th07","no":"07","title":"東方妖々夢","titleEn":"Perfect Cherry Blossom","year":2003,"hue":328,"difficulties":["E","N","H","L","Ex","Ph"],"shots":["霊夢A","霊夢B","魔理沙A","魔理沙B","咲夜A","咲夜B"]},{"id":"th08","no":"08","title":"東方永夜抄","titleEn":"Imperishable Night","year":2004,"hue":236,"difficulties":["E","N","H","L","Ex"],"shots":["結界組","詠唱組","紅魔組","幽冥組","霊夢","紫","魔理沙","アリス","咲夜","レミリア","妖夢","幽々子"],"flags":["Final A","Final B"]},{"id":"th09","no":"09","title":"東方花映塚","titleEn":"Phantasmagoria of Flower View","year":2005,"hue":88,"difficulties":["E","N","H","L","Ex"],"shots":["霊夢","魔理沙","咲夜","妖夢","鈴仙","チルノ","リリカ","メルラン","ルナサ","ミスティア","てゐ","文","メディスン","幽香","小町","映姫"]},{"id":"th10","no":"10","title":"東方風神録","titleEn":"Mountain of Faith","year":2007,"hue":18,"difficulties":["E","N","H","L","Ex"],"shots":["霊夢A","霊夢B","霊夢C","魔理沙A","魔理沙B","魔理沙C"]},{"id":"th11","no":"11","title":"東方地霊殿","titleEn":"Subterranean Animism","year":2008,"hue":28,"difficulties":["E","N","H","L","Ex"],"shots":["霊夢×紫","霊夢×萃香","霊夢×文","魔理沙×アリス","魔理沙×パチュリー","魔理沙×にとり"]},{"id":"th12","no":"12","title":"東方星蓮船","titleEn":"Undefined Fantastic Object","year":2009,"hue":200,"difficulties":["E","N","H","L","Ex"],"shots":["霊夢A","霊夢B","魔理沙A","魔理沙B","早苗A","早苗B"]},{"id":"th13","no":"13","title":"東方神霊廟","titleEn":"Ten Desires","year":2011,"hue":276,"difficulties":["E","N","H","L","Ex"],"shots":["霊夢","魔理沙","早苗","妖夢"]},{"id":"th14","no":"14","title":"東方輝針城","titleEn":"Double Dealing Character","year":2013,"hue":44,"difficulties":["E","N","H","L","Ex"],"shots":["霊夢A","霊夢B","魔理沙A","魔理沙B","咲夜A","咲夜B"]},{"id":"th15","no":"15","title":"東方紺珠伝","titleEn":"Legacy of Lunatic Kingdom","year":2015,"hue":216,"difficulties":["E","N","H","L","Ex"],"shots":["霊夢","魔理沙","早苗","鈴仙"],"flags":["完全無欠モード"]},{"id":"th16","no":"16","title":"東方天空璋","titleEn":"Hidden Star in Four Seasons","year":2017,"hue":162,"difficulties":["E","N","H","L","Ex"],"shots":["霊夢(春)","霊夢(夏)","霊夢(秋)","霊夢(冬)","チルノ(春)","チルノ(夏)","チルノ(秋)","チルノ(冬)","文(春)","文(夏)","文(秋)","文(冬)","魔理沙(春)","魔理沙(夏)","魔理沙(秋)","魔理沙(冬)"],"exShots":["霊夢(土用)","チルノ(土用)","文(土用)","魔理沙(土用)"]},{"id":"th17","no":"17","title":"東方鬼形獣","titleEn":"Wily Beast and Weakest Creature","year":2019,"hue":128,"difficulties":["E","N","H","L","Ex"],"shots":["霊夢(狼)","霊夢(獺)","霊夢(鷲)","魔理沙(狼)","魔理沙(獺)","魔理沙(鷲)","妖夢(狼)","妖夢(獺)","妖夢(鷲)"]},{"id":"th18","no":"18","title":"東方虹龍洞","titleEn":"Unconnected Marketeers","year":2021,"hue":300,"difficulties":["E","N","H","L","Ex"],"shots":["霊夢","魔理沙","咲夜","早苗"]},{"id":"th19","no":"19","title":"東方獣王園","titleEn":"Unfinished Dream of All Living Ghost","year":2023,"hue":176,"difficulties":["E","N","H","L","Ex"],"shots":["霊夢","魔理沙","早苗","藍","あうん","ナズーリン","清蘭","燐","典","マミゾウ","八千慧","早鬼","尤魔","萃香","美天","慧ノ子","ちやり","日狭美","残無"]},{"id":"th20","no":"20","title":"東方錦上京","titleEn":"Fossilized Wonders","year":2025,"hue":36,"difficulties":["E","N","H","L","Ex"],"shots":["霊夢","魔理沙"]},{"id":"nc06","no":"NC","title":"東方紅魔郷:New Classic","titleEn":"リメイク版(New Classic版)","year":2026,"remakeOf":"th06","hue":4,"difficulties":["E","N","H","L","Ex"],"shots":["霊夢A","霊夢B","魔理沙A","魔理沙B"]}]}</script>
+<!-- data:games:end -->
+<script>
+(function(){
+"use strict";
+const COLORS=[
+  {h:"面と文字",items:[["--bg","ページの地"],["--surface","カードの面"],["--surface-2","沈んだ面（ボタン、入力欄）"],["--ink","本文"],["--muted","補足・ラベル"],["--line","区切り線"]]},
+  {h:"アクセント",items:[["--accent","主ボタン、選択中、フォーカス枠"],["--accent-ink","アクセントの上の文字"]]},
+  {h:"状態",items:[["--ok","保存済み"],["--warn","処理中"],["--err","エラー、削除"]]},
+  {h:"達成段階",items:[["--t1","クリア"],["--t2","ノーコン"],["--t3","NB / NM"],["--t4a","NMNB（始点）"],["--t4b","NMNB（終点）"]]}
+];
+const SPACE=[["--sp-1","4px"],["--sp-2","8px"],["--sp-3","12px"],["--sp-4","16px"],["--sp-5","20px"],["--sp-6","28px"],["--sp-7","40px"]];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const root=document.documentElement;
+
+function hex(name){
+  const v=getComputedStyle(root).getPropertyValue(name).trim();
+  const probe=document.createElement("i");probe.style.color=v;document.body.appendChild(probe);
+  const m=getComputedStyle(probe).color.match(/\d+(\.\d+)?/g);probe.remove();
+  return m?"#"+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,"0")).join(""):v;
+}
+function renderColors(){
+  document.getElementById("colors").innerHTML=COLORS.map(g=>`<div class="card group"><h3>${esc(g.h)}</h3><div class="swatches">${
+    g.items.map(([n,r])=>`<div class="sw"><div class="chipcolor" style="background:var(${n})"></div><b>${n}</b><span>${esc(r)}<br><span class="hex">${hex(n)}</span></span></div>`).join("")
+  }</div></div>`).join("");
+}
+document.getElementById("space").innerHTML=SPACE.map(([n,v])=>`<div><code>${n}</code><span class="num">${v}</span><i style="width:var(${n})"></i></div>`).join("");
+
+const gamesEl=document.getElementById("data-games");
+if(gamesEl){
+  const games=JSON.parse(gamesEl.textContent).games;
+  document.getElementById("hues").innerHTML=games.map(g=>`<div class="hue" style="--h:${g.hue}"><div class="ring"><span>${esc(g.no)}</span></div><div><b>${esc(g.title.replace("東方",""))}</b><span class="muted num">色相 ${g.hue}</span></div></div>`).join("");
+}
+
+function pick(group,btn){group.querySelectorAll("[role=radio]").forEach(b=>b.setAttribute("aria-checked",String(b===btn)))}
+const theme=document.getElementById("theme");
+theme.addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;pick(theme,b);
+  if(b.dataset.t)root.setAttribute("data-theme",b.dataset.t);else root.removeAttribute("data-theme");
+  renderColors();
+});
+const demoSeg=document.getElementById("demoSeg");
+demoSeg.addEventListener("click",e=>{const b=e.target.closest("button");if(b)pick(demoSeg,b)});
+document.getElementById("demoTogs").addEventListener("click",e=>{const b=e.target.closest(".tog");if(b)b.setAttribute("aria-pressed",String(b.getAttribute("aria-pressed")!=="true"))});
+const mq=matchMedia("(prefers-color-scheme: dark)");if(mq.addEventListener)mq.addEventListener("change",renderColors);else if(mq.addListener)mq.addListener(renderColors);
+renderColors();
+})();
+</script>
+</body>
+</html>
