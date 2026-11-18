@@ -102,7 +102,8 @@ def validate_games(doc: dict) -> list[str]:
                 errors.append(f"{where}: {key} が空です")
         if "exShots" in g and not any(d in ("Ex", "Ph") for d in g.get("difficulties", [])):
             errors.append(f"{where}: exShots があるのに Extra がありません")
-        if not 0 <= g.get("hue", -1) < 360:
+        hue = g.get("hue")
+        if isinstance(hue, bool) or not isinstance(hue, int) or not 0 <= hue < 360:
             errors.append(f"{where}: hue は 0〜359 にしてください")
     for g in games:
         ref = g.get("remakeOf")
@@ -123,6 +124,12 @@ def block(name: str, doc: dict) -> str:
 
 COMMENT = re.compile(r"/\*.*?\*/", re.S)
 DECL = re.compile(r"(--[\w-]+)\s*:\s*([^;]+)")
+VAR_USE = re.compile(r"var\((--[\w-]+)\)")  # 既定値のない var() だけ（既定値ありは未定義でも動く）
+LIGHT = re.compile(r"^:root\s*\{(.*?)\}", re.S | re.M)
+DARK = re.compile(r'@media \(prefers-color-scheme:dark\)\s*\{\s*:root:not\(\[data-theme="light"\]\)\s*\{(.*?)\}\s*\}', re.S)
+DARK_SELECTED = re.compile(r':root\[data-theme="dark"\]')
+DESIGN_REGION = re.compile(r"<!-- design:begin -->.*?<!-- design:end -->", re.S)
+STYLE = re.compile(r"<style[^>]*>(.*?)</style>", re.S | re.I)
 
 
 def decls(body: str) -> dict[str, str]:
@@ -130,49 +137,48 @@ def decls(body: str) -> dict[str, str]:
 
 
 def validate_design(tokens: str, components: str) -> list[str]:
-    """ライトとダークで定義がそろっているか、部品が使うトークンが定義済みかを調べる。"""
+    """tokens.css の形と、部品が使うトークンが定義済みかを調べる。"""
     errors: list[str] = []
+    for name, text in (("tokens.css", tokens), ("components.css", components)):
+        if "</style" in text.lower():
+            errors.append(f"{name} に </style> を書かないでください（埋め込み先の <style> が途中で閉じます）")
     t = COMMENT.sub("", tokens)
-    light = re.search(r"^:root\s*\{(.*?)\}", t, re.S | re.M)
-    dark_os = re.search(r'@media \(prefers-color-scheme:dark\)\s*\{\s*:root:not\(\[data-theme="light"\]\)\s*\{(.*?)\}\s*\}', t, re.S)
-    dark_sel = re.search(r':root\[data-theme="dark"\]\s*\{(.*?)\}', t, re.S)
-    if not (light and dark_os and dark_sel):
-        return ['tokens.css に :root・@media (prefers-color-scheme:dark)・:root[data-theme="dark"] の 3 ブロックが必要です']
-    lv, dv, sv = decls(light.group(1)), decls(dark_os.group(1)), decls(dark_sel.group(1))
-    if dv != sv:
-        diff = sorted(k for k in dv.keys() | sv.keys() if dv.get(k) != sv.get(k))
-        errors.append(f"ダークの 2 ブロックの値が一致しません: {diff}")
-    extra = sorted((dv.keys() | sv.keys()) - lv.keys())
+    light, dark = LIGHT.search(t), DARK.search(t)
+    if not (light and dark):
+        return errors + ['tokens.css に :root と @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){…}} の 2 ブロックが必要です']
+    if DARK_SELECTED.search(t):
+        errors.append(':root[data-theme="dark"] は sync_data.py が @media のブロックから作るので、tokens.css には書かないでください')
+    lv, dv = decls(light.group(1)), decls(dark.group(1))
+    extra = sorted(dv.keys() - lv.keys())
     if extra:
         errors.append(f"ダークだけで定義されたトークンがあります（:root にライトの値も書いてください）: {extra}")
     c = COMMENT.sub("", components)
-    defined = lv.keys() | decls(c).keys()
-    used = set(re.findall(r"var\((--[\w-]+)\)", c))  # 既定値のない var() だけを調べる
-    missing = sorted(used - defined)
+    missing = sorted(set(VAR_USE.findall(c)) - lv.keys() - decls(c).keys())
     if missing:
         errors.append(f"components.css が未定義のトークンを使っています: {missing}")
     return errors
 
 
-def design_block() -> str:
-    fonts = (DESIGN / "fonts.html").read_text(encoding="utf-8").strip()
-    css = "\n\n".join((DESIGN / f).read_text(encoding="utf-8").strip() for f in DESIGN_CSS)
-    return f'<!-- design:begin -->\n{fonts}\n<style id="design">\n{css}\n</style>\n<!-- design:end -->'
+def validate_page_tokens(rel: str, html: str, tokens: str, components: str) -> list[str]:
+    """ページ固有の <style> が、どこにも定義のないトークンを使っていないか調べる。
+
+    --h や --p のようにインラインの style や JS で値を入れるものもあるので、
+    「ページ内のどこかに `--名前:` があれば定義済み」とみなす。
+    """
+    page = DESIGN_REGION.sub("", html)
+    defined = (decls(COMMENT.sub("", tokens)).keys() | decls(COMMENT.sub("", components)).keys()
+               | decls(page).keys())
+    used = {v for css in STYLE.findall(page) for v in VAR_USE.findall(COMMENT.sub("", css))}
+    missing = sorted(used - defined)
+    return [f"{rel} が未定義のトークンを使っています: {missing}"] if missing else []
 
 
-def embed(rel: str, marker: str, pattern: re.Pattern, new: str, stale: list[str], check: bool) -> bool:
-    """rel の埋め込み区間を new に置き換える。区間がなければ False を返す。"""
-    path = ROOT / rel
-    html = path.read_text(encoding="utf-8")
-    if not pattern.search(html):
-        print(f"{rel} に {marker} の埋め込み区間がありません", file=sys.stderr)
-        return False
-    updated = pattern.sub(lambda _: new, html, count=1)
-    if updated != html:
-        stale.append(rel)
-        if not check:
-            path.write_text(updated, encoding="utf-8")
-    return True
+def design_block(fonts: str, tokens: str, components: str) -> str:
+    """埋め込む区間を作る。ダークの値は @media のブロックを :root[data-theme="dark"] にも複製する。"""
+    dark = DARK.search(tokens)
+    selected = f':root[data-theme="dark"]{{{dark.group(1)}}}' if dark else ""
+    css = "\n\n".join(s.strip() for s in (tokens, selected, components) if s.strip())
+    return f'<!-- design:begin -->\n{fonts.strip()}\n<style id="design">\n{css}\n</style>\n<!-- design:end -->'
 
 
 def main() -> int:
@@ -180,40 +186,55 @@ def main() -> int:
     ap.add_argument("--check", action="store_true", help="書き換えず、更新が必要かだけ調べる")
     args = ap.parse_args()
 
-    stale: list[str] = []
+    # 1. 元データを読んで検証する（ここでは何も書き換えない）
+    errors: list[str] = []
+    writes: dict[Path, str] = {}  # 書き換えるファイル -> 新しい内容
+    regions: list[tuple[str, str, re.Pattern, str]] = []  # (HTML, 区間名, パターン, 中身)
     for name, targets in TARGETS.items():
         src = DATA / f"{name}.json"
         text = src.read_text(encoding="utf-8")
         doc = json.loads(text)
-        errors = VALIDATORS[name](doc)
-        if errors:
-            print(f"{src.relative_to(ROOT)} にエラーがあります:", *errors, sep="\n  ", file=sys.stderr)
-            return 2
+        errors += [f"{src.relative_to(ROOT).as_posix()}: {e}" for e in VALIDATORS[name](doc)]
         formatted = dump(doc) + "\n"
         if formatted != text:
-            stale.append(str(src.relative_to(ROOT)))
-            if not args.check:
-                src.write_text(formatted, encoding="utf-8")
-
+            writes[src] = formatted
         pattern = re.compile(rf"<!-- data:{name}:begin -->.*?<!-- data:{name}:end -->", re.S)
-        for rel in targets:
-            if not embed(rel, f"data:{name}", pattern, block(name, doc), stale, args.check):
-                return 2
+        regions += [(rel, f"data:{name}", pattern, block(name, doc)) for rel in targets]
 
-    tokens = (DESIGN / "tokens.css").read_text(encoding="utf-8")
-    components = (DESIGN / "components.css").read_text(encoding="utf-8")
-    errors = validate_design(tokens, components)
-    if errors:
-        print("design/ にエラーがあります:", *errors, sep="\n  ", file=sys.stderr)
-        return 2
-    pattern = re.compile(r"<!-- design:begin -->.*?<!-- design:end -->", re.S)
+    fonts, tokens, components = ((DESIGN / f).read_text(encoding="utf-8")
+                                 for f in ("fonts.html", "tokens.css", "components.css"))
+    errors += [f"design/: {e}" for e in validate_design(tokens, components)]
+    design = design_block(fonts, tokens, components)
+    regions += [(rel, "design", DESIGN_REGION, design) for rel in DESIGN_TARGETS]
+
+    # 2. 埋め込み区間を置き換えた内容を作る
+    pages: dict[str, str] = {}
+    for rel, marker, pattern, new in regions:
+        html = pages.get(rel) or (ROOT / rel).read_text(encoding="utf-8")
+        if not pattern.search(html):
+            errors.append(f"{rel} に {marker} の埋め込み区間がありません")
+            continue
+        pages[rel] = pattern.sub(lambda _: new, html, count=1)
     for rel in DESIGN_TARGETS:
-        if not embed(rel, "design", pattern, design_block(), stale, args.check):
-            return 2
+        if rel in pages:
+            errors += validate_page_tokens(rel, pages[rel], tokens, components)
 
-    if args.check and stale:
-        print("更新が必要です（uv run scripts/sync_data.py を実行してください）:", *stale, sep="\n  ")
-        return 1
+    if errors:
+        print("エラーがあります（どのファイルも書き換えていません）:", *errors, sep="\n  ", file=sys.stderr)
+        return 2
+
+    # 3. 変わったファイルだけ書き込む
+    for rel, html in pages.items():
+        if html != (ROOT / rel).read_text(encoding="utf-8"):
+            writes[ROOT / rel] = html
+    stale = [p.relative_to(ROOT).as_posix() for p in writes]
+    if args.check:
+        if stale:
+            print("更新が必要です（uv run scripts/sync_data.py を実行してください）:", *stale, sep="\n  ")
+            return 1
+    else:
+        for path, text in writes.items():
+            path.write_text(text, encoding="utf-8", newline="\n")  # Windows でも改行は LF のまま
     print("更新しました:" if stale else "変更はありません", *stale, sep="\n  ")
     return 0
 

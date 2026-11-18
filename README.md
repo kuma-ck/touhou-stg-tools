@@ -63,6 +63,18 @@ uv run scripts/sync_data.py --check
 uv run scripts/export_artifact.py clear-tracker
 ```
 
+### テスト
+
+```sh
+# 単体テスト（scripts/ の検証・埋め込み・変換）
+uv run python -m unittest discover -s tests -v
+
+# E2E テスト（ローカルにサーバーを立て、ブラウザでトップ・見本・クリア表を操作する）
+uv run tests/e2e.py
+```
+
+E2E テストは Playwright で Microsoft Edge を動かします。Edge がない環境では、先に `uv run --with playwright playwright install chromium` を実行してください。
+
 ### 作品データを直す・新作を足す
 
 `data/games.json` の `games` に 1 件追加して `uv run scripts/sync_data.py` を実行します。

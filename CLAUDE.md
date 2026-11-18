@@ -7,13 +7,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 東方Project原作STG向けの非公式ファンツール集。GitHub Pages（main ブランチのルート）で公開する。
 
 ## コマンド
-ビルド・テスト・リンターはない。Python のスクリプトは uv で実行する（`uv run`）。Python 3.10 以上・標準ライブラリのみで、必要な Python のバージョンは各スクリプト先頭のインラインメタデータ（`# /// script`）に書く。
+ビルド・リンターはない。Python のスクリプトは uv で実行する（`uv run`）。`scripts/` は Python 3.10 以上・標準ライブラリのみで、必要な Python のバージョンと依存は各ファイル先頭のインラインメタデータ（`# /// script`）に書く。
 
 ```sh
-uv run scripts/sync_data.py          # data/*.json を検証・整形し、HTML の埋め込みを更新
+uv run scripts/sync_data.py          # data/*.json と design/ を検証し、HTML の埋め込みを更新
 uv run scripts/sync_data.py --check  # 更新が必要なら終了コード 1（検証エラーは 2）
 uv run scripts/export_artifact.py clear-tracker   # -> dist/clear-tracker.html（dist/ は gitignore）
+uv run python -m unittest discover -s tests -v    # 単体テスト（scripts/ の関数）
+uv run tests/e2e.py                  # E2E テスト（Playwright。ローカルにサーバーを立てて 3 ページを操作する）
 ```
+
+E2E テストは Microsoft Edge を使う。Edge がない環境では先に `uv run --with playwright playwright install chromium` を実行する。
 
 動作確認は `<tool>/index.html` をブラウザで直接開けばよい（localStorage モードで動く）。
 
@@ -21,7 +25,8 @@ uv run scripts/export_artifact.py clear-tracker   # -> dist/clear-tracker.html�
 - 各ツールは `<tool>/index.html` の 1 ファイルで完結させる（外部の JS/CSS/データを読み込まない。Google Fonts のみ可）。
 - 共通データは `data/*.json` が正。HTML 側の `<!-- data:NAME:begin/end -->` 区間は手で編集せず、`uv run scripts/sync_data.py` で更新する。コミット前に `uv run scripts/sync_data.py --check` が通ること。
 - 見た目の共通部分（フォント、デザイントークン、共通部品の CSS）は `design/` が正。HTML 側の `<!-- design:begin/end -->` 区間も手で編集せず、`sync_data.py` で更新する。
-- 色・文字サイズ・余白・角丸は `design/tokens.css` のトークン（`var(--accent)` など）で指定し、値を直接書かない。ライトとダークの両方の値を持つので、新しい色が要るときは tokens.css の 3 ブロック（`:root`・`@media (prefers-color-scheme:dark)`・`:root[data-theme="dark"]`）すべてに足す（ダーク 2 ブロックの不一致は検証で落ちる）。
+- 色・文字サイズ・余白・角丸は `design/tokens.css` のトークン（`var(--accent)` など）で指定し、値を直接書かない。ライトとダークの両方の値を持つので、新しい色が要るときは tokens.css の `:root`（ライト）と `@media (prefers-color-scheme:dark)`（ダーク）の両方に足す。明示的にダークを選んだとき用の `:root[data-theme="dark"]` は sync_data.py が @media のブロックから作るので、tokens.css には書かない。
+- ページ固有の CSS で使うトークンも、どこかで定義されている必要がある（sync_data.py が検査する）。CSS ファイルに `</style>` を書かない。
 - `games.json` の `id` と `shots` の名前は記録データのキーなので、既存の値は変えない。
 - ゲームから抜き出した画像・音声・ロゴは使わない。画面とREADMEに二次創作の表記を入れる。
 - UI の文言は日本語。

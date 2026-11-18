@@ -13,8 +13,8 @@
 /* ==========================================================================
    デザイントークン（全ツール共通の値）
    ここが正。各ツールの HTML へは scripts/sync_data.py で埋め込む。
-   ライトの値を :root に書き、ダークの値は下の 2 つのブロックに同じものを書く
-   （OS の設定に従う場合と、明示的に data-theme="dark" を選んだ場合）。
+   ライトの値を :root に、ダークの値を @media のブロックに書く。
+   明示的に data-theme="dark" を選んだとき用の同じブロックは sync_data.py が作る。
    ========================================================================== */
 :root{
   /* 面と文字 */
@@ -85,6 +85,7 @@
   --scrim:rgba(0,0,0,.6);
   color-scheme:dark;
 }}
+
 :root[data-theme="dark"]{
   --bg:#0a0b11; --surface:#13151e; --surface-2:#1c1f2c; --ink:#eceef7; --muted:#8b91a9; --line:#252a3a;
   --accent:#8a89ff; --accent-ink:#0a0b11;
@@ -216,7 +217,7 @@ pre code{background:none;padding:0}
 <div class="wrap">
   <div class="top">
     <div>
-      <div class="eyebrow">touhou-stg-tools · Design system</div>
+      <div class="eyebrow">touhou-stg-tools · デザインシステム</div>
       <h1>デザインの見本</h1>
       <p class="lead">全ツールで使う色・文字・余白（デザイントークン）と、ボタンやカードなどの部品の見本です。値は <code>design/</code> のファイルが正で、各ツールには <code>scripts/sync_data.py</code> で埋め込みます。</p>
     </div>
@@ -379,7 +380,7 @@ document.getElementById("space").innerHTML=SPACE.map(([n,v])=>`<div><code>${n}</
 const gamesEl=document.getElementById("data-games");
 if(gamesEl){
   const games=JSON.parse(gamesEl.textContent).games;
-  document.getElementById("hues").innerHTML=games.map(g=>`<div class="hue" style="--h:${g.hue}"><div class="ring"><span>${esc(g.no)}</span></div><div><b>${esc(g.title.replace("東方",""))}</b><span class="muted num">hue ${g.hue}</span></div></div>`).join("");
+  document.getElementById("hues").innerHTML=games.map(g=>`<div class="hue" style="--h:${g.hue}"><div class="ring"><span>${esc(g.no)}</span></div><div><b>${esc(g.title.replace("東方",""))}</b><span class="muted num">色相 ${g.hue}</span></div></div>`).join("");
 }
 
 function pick(group,btn){group.querySelectorAll("[role=radio]").forEach(b=>b.setAttribute("aria-checked",String(b===btn)))}
@@ -392,7 +393,7 @@ theme.addEventListener("click",e=>{
 const demoSeg=document.getElementById("demoSeg");
 demoSeg.addEventListener("click",e=>{const b=e.target.closest("button");if(b)pick(demoSeg,b)});
 document.getElementById("demoTogs").addEventListener("click",e=>{const b=e.target.closest(".tog");if(b)b.setAttribute("aria-pressed",String(b.getAttribute("aria-pressed")!=="true"))});
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change",renderColors);
+const mq=matchMedia("(prefers-color-scheme: dark)");if(mq.addEventListener)mq.addEventListener("change",renderColors);else if(mq.addListener)mq.addListener(renderColors);
 renderColors();
 })();
 </script>

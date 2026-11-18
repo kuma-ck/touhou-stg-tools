@@ -1,8 +1,8 @@
 /* ==========================================================================
    デザイントークン（全ツール共通の値）
    ここが正。各ツールの HTML へは scripts/sync_data.py で埋め込む。
-   ライトの値を :root に書き、ダークの値は下の 2 つのブロックに同じものを書く
-   （OS の設定に従う場合と、明示的に data-theme="dark" を選んだ場合）。
+   ライトの値を :root に、ダークの値を @media のブロックに書く。
+   明示的に data-theme="dark" を選んだとき用の同じブロックは sync_data.py が作る。
    ========================================================================== */
 :root{
   /* 面と文字 */
@@ -73,13 +73,3 @@
   --scrim:rgba(0,0,0,.6);
   color-scheme:dark;
 }}
-:root[data-theme="dark"]{
-  --bg:#0a0b11; --surface:#13151e; --surface-2:#1c1f2c; --ink:#eceef7; --muted:#8b91a9; --line:#252a3a;
-  --accent:#8a89ff; --accent-ink:#0a0b11;
-  --ok:#36c48a; --warn:#f0b33a; --err:#f06464;
-  --t1:#2a2f46; --t1-fg:#d0d5ef; --t2:#6866ff; --t3:#de56b0; --t4a:#f7bd55; --t4b:#f07b46; --t4-fg:#2a1405; --on:#ffffff;
-  --sat:72%; --lit:62%; --ring-track:#232739;
-  --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 12px 32px -18px rgba(0,0,0,.7);
-  --scrim:rgba(0,0,0,.6);
-  color-scheme:dark;
-}

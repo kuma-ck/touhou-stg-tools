@@ -37,7 +37,7 @@ def main() -> int:
     src = ROOT / tool / "index.html"
     out = ROOT / "dist" / f"{tool}.html"
     out.parent.mkdir(exist_ok=True)
-    out.write_text(to_artifact(src.read_text(encoding="utf-8")), encoding="utf-8")
+    out.write_text(to_artifact(src.read_text(encoding="utf-8")), encoding="utf-8", newline="\n")
     print(out.relative_to(ROOT))
     return 0
 
