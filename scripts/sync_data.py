@@ -1,4 +1,8 @@
-"""data/ の共通データを検証し、各ツールの HTML に埋め込む。
+# /// script
+# requires-python = ">=3.10"
+# dependencies = []
+# ///
+"""data/ の共通データと design/ のデザインシステムを検証し、各ツールの HTML に埋め込む。
 
 各ツールは 1 ファイルで完結する HTML にしている（GitHub Pages でも Claude の
 アーティファクトでもそのまま動かすため）。共通データは HTML 内の
@@ -7,11 +11,18 @@
     <script type="application/json" id="data-games">...</script>
     <!-- data:games:end -->
 
-の区間に埋め込む。data/games.json を直したら、このスクリプトを実行する。
+の区間に、デザインシステム（design/fonts.html・tokens.css・components.css）は
+
+    <!-- design:begin -->
+    <link ...フォント...>
+    <style id="design">...</style>
+    <!-- design:end -->
+
+の区間に埋め込む。data/ や design/ を直したら、このスクリプトを実行する。
 
 使い方:
-    python scripts/sync_data.py          # 整形・検証して埋め込みを更新
-    python scripts/sync_data.py --check  # 更新が必要なら終了コード 1（CI 用）
+    uv run scripts/sync_data.py          # 整形・検証して埋め込みを更新
+    uv run scripts/sync_data.py --check  # 更新が必要なら終了コード 1（CI 用）
 """
 
 from __future__ import annotations
@@ -24,11 +35,20 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
+DESIGN = ROOT / "design"
 
 # 埋め込み先: データ名 -> そのデータを使う HTML
 TARGETS: dict[str, list[str]] = {
-    "games": ["clear-tracker/index.html"],
+    "games": ["clear-tracker/index.html", "design/index.html"],
 }
+
+# デザインシステムの埋め込み先（<head> 内、各ツール固有の <style> より前に置く）
+DESIGN_TARGETS: list[str] = [
+    "index.html",
+    "clear-tracker/index.html",
+    "design/index.html",
+]
+DESIGN_CSS = ["tokens.css", "components.css"]
 
 DIFFICULTIES = {"E", "N", "H", "L", "Ex", "Ph"}
 GAME_KEYS = {"id", "no", "title", "titleEn", "year", "remakeOf", "hue",
@@ -101,6 +121,60 @@ def block(name: str, doc: dict) -> str:
             f"<!-- data:{name}:end -->")
 
 
+COMMENT = re.compile(r"/\*.*?\*/", re.S)
+DECL = re.compile(r"(--[\w-]+)\s*:\s*([^;]+)")
+
+
+def decls(body: str) -> dict[str, str]:
+    return {k: " ".join(v.split()) for k, v in DECL.findall(body)}
+
+
+def validate_design(tokens: str, components: str) -> list[str]:
+    """ライトとダークで定義がそろっているか、部品が使うトークンが定義済みかを調べる。"""
+    errors: list[str] = []
+    t = COMMENT.sub("", tokens)
+    light = re.search(r"^:root\s*\{(.*?)\}", t, re.S | re.M)
+    dark_os = re.search(r'@media \(prefers-color-scheme:dark\)\s*\{\s*:root:not\(\[data-theme="light"\]\)\s*\{(.*?)\}\s*\}', t, re.S)
+    dark_sel = re.search(r':root\[data-theme="dark"\]\s*\{(.*?)\}', t, re.S)
+    if not (light and dark_os and dark_sel):
+        return ['tokens.css に :root・@media (prefers-color-scheme:dark)・:root[data-theme="dark"] の 3 ブロックが必要です']
+    lv, dv, sv = decls(light.group(1)), decls(dark_os.group(1)), decls(dark_sel.group(1))
+    if dv != sv:
+        diff = sorted(k for k in dv.keys() | sv.keys() if dv.get(k) != sv.get(k))
+        errors.append(f"ダークの 2 ブロックの値が一致しません: {diff}")
+    extra = sorted((dv.keys() | sv.keys()) - lv.keys())
+    if extra:
+        errors.append(f"ダークだけで定義されたトークンがあります（:root にライトの値も書いてください）: {extra}")
+    c = COMMENT.sub("", components)
+    defined = lv.keys() | decls(c).keys()
+    used = set(re.findall(r"var\((--[\w-]+)\)", c))  # 既定値のない var() だけを調べる
+    missing = sorted(used - defined)
+    if missing:
+        errors.append(f"components.css が未定義のトークンを使っています: {missing}")
+    return errors
+
+
+def design_block() -> str:
+    fonts = (DESIGN / "fonts.html").read_text(encoding="utf-8").strip()
+    css = "\n\n".join((DESIGN / f).read_text(encoding="utf-8").strip() for f in DESIGN_CSS)
+    return f'<!-- design:begin -->\n{fonts}\n<style id="design">\n{css}\n</style>\n<!-- design:end -->'
+
+
+def embed(rel: str, marker: str, pattern: re.Pattern, new: str, stale: list[str], check: bool) -> bool:
+    """rel の埋め込み区間を new に置き換える。区間がなければ False を返す。"""
+    path = ROOT / rel
+    html = path.read_text(encoding="utf-8")
+    if not pattern.search(html):
+        print(f"{rel} に {marker} の埋め込み区間がありません", file=sys.stderr)
+        return False
+    updated = pattern.sub(lambda _: new, html, count=1)
+    if updated != html:
+        stale.append(rel)
+        if not check:
+            path.write_text(updated, encoding="utf-8")
+    return True
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", action="store_true", help="書き換えず、更新が必要かだけ調べる")
@@ -123,19 +197,22 @@ def main() -> int:
 
         pattern = re.compile(rf"<!-- data:{name}:begin -->.*?<!-- data:{name}:end -->", re.S)
         for rel in targets:
-            path = ROOT / rel
-            html = path.read_text(encoding="utf-8")
-            if not pattern.search(html):
-                print(f"{rel} に data:{name} の埋め込み区間がありません", file=sys.stderr)
+            if not embed(rel, f"data:{name}", pattern, block(name, doc), stale, args.check):
                 return 2
-            updated = pattern.sub(lambda _: block(name, doc), html, count=1)
-            if updated != html:
-                stale.append(rel)
-                if not args.check:
-                    path.write_text(updated, encoding="utf-8")
+
+    tokens = (DESIGN / "tokens.css").read_text(encoding="utf-8")
+    components = (DESIGN / "components.css").read_text(encoding="utf-8")
+    errors = validate_design(tokens, components)
+    if errors:
+        print("design/ にエラーがあります:", *errors, sep="\n  ", file=sys.stderr)
+        return 2
+    pattern = re.compile(r"<!-- design:begin -->.*?<!-- design:end -->", re.S)
+    for rel in DESIGN_TARGETS:
+        if not embed(rel, "design", pattern, design_block(), stale, args.check):
+            return 2
 
     if args.check and stale:
-        print("更新が必要です（python scripts/sync_data.py を実行してください）:", *stale, sep="\n  ")
+        print("更新が必要です（uv run scripts/sync_data.py を実行してください）:", *stale, sep="\n  ")
         return 1
     print("更新しました:" if stale else "変更はありません", *stale, sep="\n  ")
     return 0

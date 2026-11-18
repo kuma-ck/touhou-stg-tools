@@ -1,0 +1,85 @@
+/* ==========================================================================
+   デザイントークン（全ツール共通の値）
+   ここが正。各ツールの HTML へは scripts/sync_data.py で埋め込む。
+   ライトの値を :root に書き、ダークの値は下の 2 つのブロックに同じものを書く
+   （OS の設定に従う場合と、明示的に data-theme="dark" を選んだ場合）。
+   ========================================================================== */
+:root{
+  /* 面と文字 */
+  --bg:#f3f4f9;          /* ページの地 */
+  --surface:#ffffff;     /* カードの面 */
+  --surface-2:#eceef6;   /* カードの中の一段沈んだ面（ボタン、入力欄、未記録のマス） */
+  --ink:#10131f;         /* 本文 */
+  --muted:#666d86;       /* 補足・ラベル */
+  --line:#e1e4ee;        /* 区切り線 */
+
+  /* アクセント（主ボタン、選択中、フォーカス枠） */
+  --accent:#5856ef;
+  --accent-ink:#ffffff;  /* アクセントの上に載せる文字 */
+
+  /* 状態（保存済み・処理中・エラー）。アクセントとは別に使う */
+  --ok:#1a9e6a; --warn:#d99512; --err:#d94444;
+
+  /* 達成段階: クリア < ノーコン < NB/NM < NMNB */
+  --t1:#dde1f1; --t1-fg:#38405f;   /* クリア */
+  --t2:#5856ef;                     /* ノーコン */
+  --t3:#cf3f9c;                     /* NB / NM */
+  --t4a:#f6b443; --t4b:#ee6a3a; --t4-fg:#2a1405;  /* NMNB（グラデーション） */
+  --on:#ffffff;                     /* t2・t3 の上の文字 */
+
+  /* 作品のテーマ色: hsl(var(--h) var(--sat) var(--lit))。--h は games.json の hue */
+  --sat:70%; --lit:54%;
+  --ring-track:#e5e7f1;  /* 進捗リングの未達部分 */
+
+  /* 影と幕 */
+  --shadow:0 1px 2px rgba(16,19,31,.05),0 10px 28px -16px rgba(16,19,31,.18);
+  --scrim:rgba(10,12,20,.42);
+
+  /* 書体: 和文と UI は M PLUS 2、数字と英字の見出しは Outfit */
+  --f-ui:"M PLUS 2","Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+  --f-num:"Outfit","M PLUS 2",system-ui,sans-serif;
+
+  /* 文字サイズ（本文は 15px） */
+  --fs-xs:.72rem;   /* 注記、凡例、チップ */
+  --fs-sm:.8rem;    /* 補足文 */
+  --fs-md:.88rem;   /* ボタン、小さめの本文 */
+  --fs-lg:1.1rem;   /* カードの見出し */
+  --fs-xl:1.45rem;  /* 大きな数値 */
+  --fs-2xl:1.9rem;  /* ページの見出し */
+
+  /* 余白（4px 刻み） */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:28px; --sp-7:40px;
+
+  /* 角丸 */
+  --r-sm:10px;      /* 小さな部品の中の選択肢 */
+  --r-md:14px;      /* 入力欄、お知らせ */
+  --r-lg:20px;      /* カード */
+  --r-full:999px;   /* ボタン、チップ */
+
+  /* 動き */
+  --ease-out:cubic-bezier(.2,.8,.2,1);
+  --dur-fast:.15s;
+
+  /* ページ幅 */
+  --wrap-w:820px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0a0b11; --surface:#13151e; --surface-2:#1c1f2c; --ink:#eceef7; --muted:#8b91a9; --line:#252a3a;
+  --accent:#8a89ff; --accent-ink:#0a0b11;
+  --ok:#36c48a; --warn:#f0b33a; --err:#f06464;
+  --t1:#2a2f46; --t1-fg:#d0d5ef; --t2:#6866ff; --t3:#de56b0; --t4a:#f7bd55; --t4b:#f07b46; --t4-fg:#2a1405; --on:#ffffff;
+  --sat:72%; --lit:62%; --ring-track:#232739;
+  --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 12px 32px -18px rgba(0,0,0,.7);
+  --scrim:rgba(0,0,0,.6);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0a0b11; --surface:#13151e; --surface-2:#1c1f2c; --ink:#eceef7; --muted:#8b91a9; --line:#252a3a;
+  --accent:#8a89ff; --accent-ink:#0a0b11;
+  --ok:#36c48a; --warn:#f0b33a; --err:#f06464;
+  --t1:#2a2f46; --t1-fg:#d0d5ef; --t2:#6866ff; --t3:#de56b0; --t4a:#f7bd55; --t4b:#f07b46; --t4-fg:#2a1405; --on:#ffffff;
+  --sat:72%; --lit:62%; --ring-track:#232739;
+  --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 12px 32px -18px rgba(0,0,0,.7);
+  --scrim:rgba(0,0,0,.6);
+  color-scheme:dark;
+}
