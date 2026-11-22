@@ -169,10 +169,15 @@ class E2E(unittest.TestCase):
         expect(cell).to_have_text("1cc")
 
         self.wait_saved(page, "th08", f"{shot}|L")
-        page.wait_for_function(f"JSON.parse(localStorage.getItem({LOCAL_KEY!r})).games.th08.cells[{f'{shot}|L'!r}].note === '6面で2ボム'")
+        # 書きかけのメモは「完了」で日時付きの 1 件として保存される
+        page.wait_for_function(f"(JSON.parse(localStorage.getItem({LOCAL_KEY!r})).games.th08.cells[{f'{shot}|L'!r}].notes || []).length === 1")
         rec = self.stored(page)["games"]["th08"]["cells"][f"{shot}|L"]
         self.assertTrue(rec["c"] and rec["cc"])
         self.assertRegex(rec["date"], r"^\d{4}-\d{2}-\d{2}$")
+        self.assertEqual(rec["dates"], {"c": rec["date"], "cc": rec["date"]})
+        self.assertEqual(rec["notes"][0]["text"], "6面で2ボム")
+        self.assertRegex(rec["notes"][0]["at"], r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$")
+        self.assertTrue(rec["note"].endswith(" 6面で2ボム"), rec["note"])  # 旧形式・CSV 用の文字列
 
         page.reload()
         expect(page.locator(f'.cell[data-s="{shot}"][data-d="L"]')).to_have_class("cell t2")
@@ -213,6 +218,129 @@ class E2E(unittest.TestCase):
         rec = self.stored(page)["games"]["th16"]["cells"][f"{shot}|Ex"]
         self.assertTrue(rec["c"] and rec["cc"], rec)
         expect(page.locator(f'.cell[data-s="{shot}"][data-d="Ex"]')).to_have_text("Clear")
+
+    def sheet_for(self, page: Page, shot: str, diff: str):
+        page.locator(f'.cell[data-s="{shot}"][data-d="{diff}"]').click()
+        sheet = page.get_by_role("dialog")
+        expect(sheet).to_be_visible()
+        return sheet
+
+    def cell_rec(self, page: Page, gid: str, key: str) -> dict:
+        return (self.stored(page) or {"games": {}})["games"].get(gid, {}).get("cells", {}).get(key)
+
+    def wait_rec(self, page: Page, gid: str, key: str, pred):
+        """保存が終わり、セルの記録が条件を満たすまで待つ（localStorage へは少し遅れて書かれる）。"""
+        page.wait_for_timeout(50)
+        for _ in range(40):
+            rec = self.cell_rec(page, gid, key)
+            if rec is not None and pred(rec):
+                return rec
+            page.wait_for_timeout(50)
+        self.fail(f"{gid} {key} の記録が期待どおりになりません: {self.cell_rec(page, gid, key)}")
+
+    def test_tracker_dates_are_kept_per_achievement(self):
+        page = self.open("/clear-tracker/")
+        page.clock.set_fixed_time("2026-11-02T12:00:00")
+        page.goto(self.base + "/clear-tracker/#th08")
+        key = "幽冥組|N"
+        sheet = self.sheet_for(page, "幽冥組", "N")
+        expect(sheet.locator("#dateRows .hint")).to_contain_text("到達や縛りを選ぶと")
+        sheet.get_by_role("radio", name="クリア").click()
+        self.wait_rec(page, "th08", key, lambda r: r.get("dates") == {"c": "2026-11-02"})
+        sheet.get_by_role("button", name="完了").click()
+
+        # 後日ノーコンと Final B を達成しても、クリアの日付は残る
+        page.clock.set_fixed_time("2026-11-22T12:00:00")
+        sheet = self.sheet_for(page, "幽冥組", "N")
+        sheet.get_by_role("radio", name="ノーコン").click()
+        sheet.get_by_role("button", name="Final B").click()
+        rec = self.wait_rec(page, "th08", key, lambda r: "x:Final B" in r.get("dates", {}))
+        self.assertEqual(rec["dates"], {"c": "2026-11-02", "cc": "2026-11-22", "x:Final B": "2026-11-22"})
+        self.assertEqual(rec["date"], "2026-11-22")  # 旧形式用は最新の達成日
+        expect(sheet.locator(".drow")).to_have_count(3)
+        expect(sheet.locator('[data-dk="c"]')).to_have_value("2026-11-02")
+
+        # 日付は 1 件ずつ直せる
+        sheet.locator('[data-dk="cc"]').fill("2026-11-10")
+        self.wait_rec(page, "th08", key, lambda r: r["dates"].get("cc") == "2026-11-10")
+
+        # 未に戻して選び直すと、元の日付に戻る
+        sheet.get_by_role("radio", name="未").click()
+        rec = self.wait_rec(page, "th08", key, lambda r: not r.get("c"))
+        self.assertEqual(rec.get("dates"), {"x:Final B": "2026-11-22"})
+        sheet.get_by_role("radio", name="ノーコン").click()
+        rec = self.wait_rec(page, "th08", key, lambda r: r.get("cc"))
+        self.assertEqual(rec["dates"], {"c": "2026-11-02", "cc": "2026-11-10", "x:Final B": "2026-11-22"})
+        sheet.get_by_role("button", name="完了").click()
+
+        # 最近の達成は達成した日ごとに並ぶ
+        page.get_by_role("link", name="作品一覧").click()
+        items = page.locator(".recent li")
+        expect(items).to_have_count(3)
+        expect(items.nth(0)).to_contain_text("Final B")
+        expect(items.nth(1)).to_contain_text("2026-11-10")
+        expect(items.nth(1).locator(".chip")).to_have_text("1cc")
+        expect(items.nth(2).locator(".chip")).to_have_text("Clear")
+
+    def test_tracker_memos_are_separate_entries(self):
+        page = self.open("/clear-tracker/")
+        page.clock.set_fixed_time("2026-11-02T21:30:00")
+        page.goto(self.base + "/clear-tracker/#th06")
+        key = "霊夢A|H"
+        sheet = self.sheet_for(page, "霊夢A", "H")
+        save = sheet.get_by_role("button", name="メモを保存")
+        expect(save).to_be_disabled()
+        sheet.locator("#fNote").fill("初クリア 残1")
+        save.click()
+        expect(sheet.locator("#fNote")).to_have_value("")
+        page.clock.set_fixed_time("2026-11-22T20:05:00")
+        sheet.locator("#fNote").fill("2回目")
+        sheet.locator("#fNote").press("Control+Enter")
+        rec = self.wait_rec(page, "th06", key, lambda r: len(r.get("notes", [])) == 2)
+        self.assertEqual([(n["at"], n["text"]) for n in rec["notes"]],
+                         [("2026-11-02T21:30", "初クリア 残1"), ("2026-11-22T20:05", "2回目")])
+        notes = sheet.locator(".note")
+        expect(notes.nth(0)).to_contain_text("2026/11/22 20:05")  # 新しい順
+        expect(notes.nth(1)).to_contain_text("初クリア 残1")
+
+        # 編集しても書いた日時は変わらず、編集日時が付く
+        notes.nth(1).get_by_role("button", name="編集").click()
+        sheet.locator("[data-edit]").fill("初クリア 残2")
+        sheet.get_by_role("button", name="保存", exact=True).click()
+        rec = self.wait_rec(page, "th06", key, lambda r: r["notes"][0]["text"] == "初クリア 残2")
+        self.assertEqual(rec["notes"][0]["at"], "2026-11-02T21:30")
+        self.assertEqual(rec["notes"][0]["edited"], "2026-11-22T20:05")
+        expect(notes.nth(1)).to_contain_text("編集")
+
+        # 削除は確かめてから
+        notes.nth(0).get_by_role("button", name="削除", exact=True).click()
+        expect(sheet.locator(".nconf")).to_contain_text("このメモを削除しますか")
+        sheet.get_by_role("button", name="削除する").click()
+        expect(notes).to_have_count(1)
+        rec = self.wait_rec(page, "th06", key, lambda r: len(r["notes"]) == 1)
+        self.assertEqual(rec["note"], "2026/11/02 21:30 初クリア 残2")
+        # 到達を記録していなくても、メモだけのマスは残る
+        self.assertNotIn("c", rec)
+        sheet.get_by_role("button", name="完了").click()
+        expect(page.locator('.cell[data-s="霊夢A"][data-d="H"] .dot')).to_have_count(1)
+
+    def test_tracker_reads_old_note_format(self):
+        page = self.open("/clear-tracker/")
+        old = {"version": 1, "games": {"th08": {"cells": {"紅魔組|E": {
+            "c": True, "cc": True, "date": "2025-05-05", "note": "古いメモ\n2026/11/22 Final B 残2"}},
+            "hidden": {"shots": [], "diffs": []}, "skip": False}}}
+        page.evaluate(f"localStorage.setItem({LOCAL_KEY!r}, {json.dumps(json.dumps(old, ensure_ascii=False), ensure_ascii=False)})")
+        page.goto(self.base + "/clear-tracker/#th08")
+        page.reload()  # ハッシュだけの移動では読み直さないので、保存した記録を読ませる
+        sheet = self.sheet_for(page, "紅魔組", "E")
+        notes = sheet.locator(".note")
+        expect(notes).to_have_count(2)
+        expect(notes.nth(0)).to_contain_text("2026/11/22")
+        expect(notes.nth(0)).to_contain_text("Final B 残2")
+        expect(notes.nth(1)).to_contain_text("以前のメモ")
+        # 旧形式の日付は最初の達成（クリア）の日付として出す
+        expect(sheet.locator('[data-dk="c"]')).to_have_value("2025-05-05")
+        expect(sheet.locator('[data-dk="cc"]')).to_have_value("")
 
     def test_tracker_dark_mode(self):
         page = self.open("/clear-tracker/#th08", scheme="dark")

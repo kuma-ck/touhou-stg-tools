@@ -43,6 +43,8 @@ E2E テストは Microsoft Edge を使う。Edge がない環境では先に `uv
 ## 東方クリア表
 - 保存先は 2 通り: Claude のアーティファクト内では `window.claude.use("db")`（コレクション `games`、1 作品 1 ドキュメント）、それ以外は localStorage（キー `touhou-stg-tools:clear-tracker:v1`）。どちらかは `window.claude.use` の有無と iframe 内かどうかで判定している（`IN_CLAUDE`）。ファイルの書き出し（バックアップ JSON・CSV）も同じ判定で分かれ、アーティファクト内では `window.claude.use("downloads")`、それ以外は Blob のリンクでダウンロードする。
 - 記録の形式（cells / hidden / skip、バックアップ JSON の `app: "touhou-clear"`）は Google ドライブへの定期バックアップと復元機能が依存しているので、変えるときは互換を保つ。
-- `cells` のキーは `"<機体名>|<難易度>"`。値は `c`（クリア）・`cc`（ノーコン）・`nb`・`nm`・`nmnb` の真偽値と、`x`（作品固有の `flags`）、`date`、`note`。段階は クリア < ノーコン < NB/NM < NMNB で、集計の「達成」はノーコン以上。Extra / Phantasm にはコンティニューがないので、クリアは `cc` として保存する。
+- `cells` のキーは `"<機体名>|<難易度>"`。値は `c`（クリア）・`cc`（ノーコン）・`nb`・`nm`・`nmnb` の真偽値と、`x`（作品固有の `flags`）、`date`、`dates`、`note`、`notes`。段階は クリア < ノーコン < NB/NM < NMNB で、集計の「達成」はノーコン以上。Extra / Phantasm にはコンティニューがないので、クリアは `cc` として保存する。
 - `exShots` がある作品では、Extra / Phantasm だけ `exShots` の機体を使う（`shotsFor`）。
+- マスの達成日は `dates`（`c` / `cc` / `nb` / `nm` / `nmnb` / `x:<フラグ名>` → `YYYY-MM-DD`）に達成ごとに持つ。`date` は旧形式との互換用に最新の達成日を入れ続ける。`dates` が無い旧データは `date` を最初の達成の日付として扱う。
+- マスのメモは `notes`（`[{id, at: "YYYY-MM-DDTHH:MM", text, edited?}]`）に 1 件ずつ持つ。`note` は旧形式・CSV との互換用に全メモをつないだ文字列を入れ続ける。`notes` が無い旧データは `note` を行頭の日付ごとに分けて読む。
 - Claude のアーティファクトへ反映するときは `uv run scripts/export_artifact.py clear-tracker` の出力（`dist/clear-tracker.html`）を既存アーティファクトの URL に公開する。
