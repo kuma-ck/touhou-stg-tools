@@ -68,7 +68,6 @@ button:disabled{cursor:default;opacity:.55}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:8px 16px;border-radius:999px;background:var(--surface-2);font-weight:700;font-size:.85rem}
 .btn:hover:not(:disabled){filter:brightness(.97)}
 .btn.primary{background:var(--accent);color:var(--accent-ink)}
-.btn.danger{background:transparent;color:var(--err);padding-inline:6px}
 /* ring */
 .ring{--p:0;--c:var(--accent);flex:none;width:var(--sz,56px);height:var(--sz,56px);border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--c) calc(var(--p)*1%),var(--ring-track) 0)}
 .ring>span{width:calc(100% - var(--th,8px));height:calc(100% - var(--th,8px));border-radius:50%;background:var(--surface);display:grid;place-items:center;font-family:var(--f-num);font-weight:700;line-height:1}
@@ -206,7 +205,7 @@ td.c{padding:0}
 .note p{margin:0;padding-right:4px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.92rem}
 .note .field textarea{background:var(--surface)}
 .nconf{display:flex;align-items:center;justify-content:flex-end;gap:4px;font-size:.8rem}
-.sheet-foot{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sheet-foot{display:flex;justify-content:flex-end;align-items:center;gap:8px}
 @media (prefers-reduced-motion:no-preference){
   .sheet{animation:up .22s cubic-bezier(.2,.8,.2,1)}
   .scrim{animation:fade .2s ease}
@@ -395,13 +394,13 @@ function renderGame(g){
 /* ---------- sheet ---------- */
 let cur=null;
 const baseOf=c=>c.cc?2:c.c?1:0;
-let editing=null,delAsk=null,clrAsk=false;
-function openSheet(gid,s,d){cur={gid,s,d};editing=delAsk=null;clrAsk=false;renderSheet()}
+let editing=null,delAsk=null;
+function openSheet(gid,s,d){cur={gid,s,d};editing=delAsk=null;renderSheet()}
 function closeSheet(){
   if(cur&&writable()){ // 保存し忘れた書きかけ・編集中のメモは閉じるときに保存する
     const ed=editing&&document.querySelector(`[data-edit="${CSS.escape(editing)}"]`);if(ed)saveEdit(editing,ed.value);
     const fn=$("#fNote");if(fn&&fn.value.trim())addNote(fn.value)}
-  cur=null;editing=delAsk=null;clrAsk=false;$("#sheetRoot").innerHTML="";render(true)}
+  cur=null;editing=delAsk=null;$("#sheetRoot").innerHTML="";render(true)}
 function renderSheet(){
   if(!cur){$("#sheetRoot").innerHTML="";return}
   const g=GI[cur.gid],c=cell(cur.gid,cur.s,cur.d),ex=isEx(cur.d),dis=writable()?"":"disabled";
@@ -419,7 +418,7 @@ function renderSheet(){
     <div><label class="lbl" for="fNote">メモ</label><div class="field memo-new"><textarea id="fNote" placeholder="スコア、残機、リプレイの保存場所など" ${dis}></textarea>
       <div class="memo-act"><span class="hint">保存すると日時が付き、1件ずつ残ります</span><button type="button" class="btn primary sm" id="addNote" disabled>メモを保存</button></div></div>
       <div class="notes" id="noteList" data-sig="${esc(noteSig(c))}">${noteItems(c,dis)}</div></div></div>
-    <div class="sheet-foot"><button type="button" class="btn danger" id="clrCell" ${dis}>このマスを消去</button><button type="button" class="btn primary" id="closeSheet">完了</button></div>
+    <div class="sheet-foot"><button type="button" class="btn primary" id="closeSheet">完了</button></div>
   </div></div>`;
 }
 function dateRows(c,d,dis){const ds=datesOf(c,d),ks=shownKeys(c,d);
@@ -449,8 +448,7 @@ function syncSheet(){
   const dr=$("#dateRows"),sig=dateSig(c);
   if(dr&&dr.dataset.sig!==sig&&!dr.contains(document.activeElement)){dr.innerHTML=dateRows(c,cur.d,dis?"disabled":"");dr.dataset.sig=sig}
   refreshNotes();
-  const cb=$("#clrCell");if(cb)cb.textContent=clrAsk?"もう一度押すと、日付・メモも含めて消去":"このマスを消去";
-  root.querySelectorAll("[data-base],[data-lv],[data-fl],[data-dk],#fNote,#clrCell,[data-nedit],[data-ndel],[data-ndelok],[data-nsave],[data-edit]").forEach(el=>{el.disabled=dis});
+  root.querySelectorAll("[data-base],[data-lv],[data-fl],[data-dk],#fNote,[data-nedit],[data-ndel],[data-ndelok],[data-nsave],[data-edit]").forEach(el=>{el.disabled=dis});
   const an=$("#addNote"),fn=$("#fNote");if(an)an.disabled=dis||!(fn&&fn.value.trim());
 }
 const stable=o=>JSON.stringify(o,(k,v)=>v&&typeof v==="object"&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(q=>[q,v[q]])):v);
@@ -541,7 +539,6 @@ document.addEventListener("click",e=>{
   if(t.id==="setBtn"){showSettings=!showSettings;return render(true)}
   if(t.classList.contains("cell")){const g=GI[location.hash.slice(1)];if(g)openSheet(g.id,t.dataset.s,t.dataset.d);return}
   if(!cur)return;
-  if(clrAsk&&t.id!=="clrCell"){clrAsk=false;syncSheet()}
   if(t.dataset.base!==undefined)return setBase(+t.dataset.base);
   if(t.dataset.lv)return toggleLevel(t.dataset.lv);
   if(t.dataset.fl){const f=t.dataset.fl;mutate(c=>{c.x=Object.assign({},c.x||{});if(c.x[f])delete c.x[f];else c.x[f]=true;if(!Object.keys(c.x).length)delete c.x});syncSheet();return render(true)}
@@ -551,7 +548,6 @@ document.addEventListener("click",e=>{
   if(t.dataset.ndelok)return delNote(t.dataset.ndelok);
   if(t.dataset.ncancel){editing=delAsk=null;return refreshNotes(true)}
   if(t.dataset.nsave){const ta=document.querySelector(`[data-edit="${CSS.escape(t.dataset.nsave)}"]`);return saveEdit(t.dataset.nsave,ta?ta.value:"")}
-  if(t.id==="clrCell"){if(!clrAsk){clrAsk=true;return syncSheet()}clrAsk=false;const s=gdoc(cur.gid);delete s.cells[key(cur.s,cur.d)];save(cur.gid,0);editing=delAsk=null;syncSheet();return render(true)}
 });
 document.addEventListener("keydown",e=>{
   if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)&&cur&&!e.isComposing){const t=e.target;
