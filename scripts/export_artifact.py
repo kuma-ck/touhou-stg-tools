@@ -1,10 +1,14 @@
+# /// script
+# requires-python = ">=3.10"
+# dependencies = []
+# ///
 """ツールの HTML を Claude のアーティファクト公開用の形に変換して dist/ に書き出す。
 
 アーティファクトは公開時に <!doctype>・<html>・<head>・<body> と charset / viewport
 を自動で付けるため、それらを取り除いた本文だけを渡す必要がある。
 
 使い方:
-    python scripts/export_artifact.py clear-tracker   # -> dist/clear-tracker.html
+    uv run scripts/export_artifact.py clear-tracker   # -> dist/clear-tracker.html
 """
 
 from __future__ import annotations
@@ -33,7 +37,7 @@ def main() -> int:
     src = ROOT / tool / "index.html"
     out = ROOT / "dist" / f"{tool}.html"
     out.parent.mkdir(exist_ok=True)
-    out.write_text(to_artifact(src.read_text(encoding="utf-8")), encoding="utf-8")
+    out.write_text(to_artifact(src.read_text(encoding="utf-8")), encoding="utf-8", newline="\n")
     print(out.relative_to(ROOT))
     return 0
 
