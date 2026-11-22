@@ -99,7 +99,7 @@ class E2E(unittest.TestCase):
 
     def test_design_page_renders_tokens_and_games(self):
         page = self.open("/design/")
-        expect(page.locator("#colors .sw")).to_have_count(16)
+        expect(page.locator("#colors .sw")).to_have_count(17)
         expect(page.locator("#colors .sw .hex").first).to_have_text("#f3f4f9")
         expect(page.locator("#hues .hue")).to_have_count(len(GAMES))
         expect(page.locator("#space > div")).to_have_count(7)

@@ -22,7 +22,7 @@
   --surface:#ffffff;     /* カードの面 */
   --surface-2:#eceef6;   /* カードの中の一段沈んだ面（ボタン、入力欄、未記録のマス） */
   --ink:#10131f;         /* 本文 */
-  --muted:#666d86;       /* 補足・ラベル */
+  --muted:#5d6480;       /* 補足・ラベル */
   --line:#e1e4ee;        /* 区切り線 */
 
   /* アクセント（主ボタン、選択中、フォーカス枠） */
@@ -30,17 +30,19 @@
   --accent-ink:#ffffff;  /* アクセントの上に載せる文字 */
 
   /* 状態（保存済み・処理中・エラー）。アクセントとは別に使う */
-  --ok:#1a9e6a; --warn:#d99512; --err:#d94444;
+  --ok:#1a9e6a; --warn:#b07800; --err:#c73838;
 
   /* 達成段階: クリア < ノーコン < NB/NM < NMNB */
-  --t1:#dde1f1; --t1-fg:#38405f;   /* クリア */
+  --t1:#dde1f1; --t1-fg:#38405f;   /* クリア（マス） */
+  --t1-bar:#8f98cd;                 /* クリア（棒グラフと、その凡例。マスの色だと背景に溶けるため一段濃い） */
   --t2:#5856ef;                     /* ノーコン */
-  --t3:#cf3f9c;                     /* NB / NM */
+  --t3:#c2338f; --t3-fg:#ffffff;   /* NB / NM（ダークでは明るいピンクに濃い文字） */
   --t4a:#f6b443; --t4b:#ee6a3a; --t4-fg:#2a1405;  /* NMNB（グラデーション） */
-  --on:#ffffff;                     /* t2・t3 の上の文字 */
+  --on:#ffffff;                     /* t2 の上の文字 */
 
-  /* 作品のテーマ色: hsl(var(--h) var(--sat) var(--lit))。--h は games.json の hue */
-  --sat:70%; --lit:54%;
+  /* 作品のテーマ色: oklch(var(--theme-l) var(--theme-c) var(--h))。--h は games.json の hue。
+     OKLCH は人の目の明るさに合わせた表し方なので、色相が違っても文字の読みやすさがそろう */
+  --theme-l:.52; --theme-c:.14;   /* 明るさ・鮮やかさ（白いカードの上でコントラスト比 4.8 以上） */
   --ring-track:#e5e7f1;  /* 進捗リングの未達部分 */
 
   /* 影と幕 */
@@ -79,8 +81,8 @@
   --bg:#0a0b11; --surface:#13151e; --surface-2:#1c1f2c; --ink:#eceef7; --muted:#8b91a9; --line:#252a3a;
   --accent:#8a89ff; --accent-ink:#0a0b11;
   --ok:#36c48a; --warn:#f0b33a; --err:#f06464;
-  --t1:#2a2f46; --t1-fg:#d0d5ef; --t2:#6866ff; --t3:#de56b0; --t4a:#f7bd55; --t4b:#f07b46; --t4-fg:#2a1405; --on:#ffffff;
-  --sat:72%; --lit:62%; --ring-track:#232739;
+  --t1:#2a2f46; --t1-fg:#d0d5ef; --t1-bar:#4b5480; --t2:#5654e6; --t3:#e266b8; --t3-fg:#22061a; --t4a:#f7bd55; --t4b:#f07b46; --t4-fg:#2a1405; --on:#ffffff;
+  --theme-l:.72; --theme-c:.13; --ring-track:#232739;
   --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 12px 32px -18px rgba(0,0,0,.7);
   --scrim:rgba(0,0,0,.6);
   color-scheme:dark;
@@ -90,8 +92,8 @@
   --bg:#0a0b11; --surface:#13151e; --surface-2:#1c1f2c; --ink:#eceef7; --muted:#8b91a9; --line:#252a3a;
   --accent:#8a89ff; --accent-ink:#0a0b11;
   --ok:#36c48a; --warn:#f0b33a; --err:#f06464;
-  --t1:#2a2f46; --t1-fg:#d0d5ef; --t2:#6866ff; --t3:#de56b0; --t4a:#f7bd55; --t4b:#f07b46; --t4-fg:#2a1405; --on:#ffffff;
-  --sat:72%; --lit:62%; --ring-track:#232739;
+  --t1:#2a2f46; --t1-fg:#d0d5ef; --t1-bar:#4b5480; --t2:#5654e6; --t3:#e266b8; --t3-fg:#22061a; --t4a:#f7bd55; --t4b:#f07b46; --t4-fg:#2a1405; --on:#ffffff;
+  --theme-l:.72; --theme-c:.13; --ring-track:#232739;
   --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 12px 32px -18px rgba(0,0,0,.7);
   --scrim:rgba(0,0,0,.6);
   color-scheme:dark;
@@ -194,15 +196,16 @@ button:disabled{cursor:default;opacity:.55}
 .brow .cnt{text-align:right;color:var(--muted)}
 .stack{display:flex;height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden}
 .stack i{display:block;height:100%}
-.stack .s1{background:var(--t1)} .stack .s2{background:var(--t2)} .stack .s3{background:var(--t3)} .stack .s4{background:linear-gradient(90deg,var(--t4a),var(--t4b))}
+.stack .s1{background:var(--t1-bar)} .stack .s2{background:var(--t2)} .stack .s3{background:var(--t3)} .stack .s4{background:linear-gradient(90deg,var(--t4a),var(--t4b))}
 /* legend */
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.76rem;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:12px;height:12px;border-radius:4px;background:var(--surface-2)}
+.sec-h .legend i.t1{background:var(--t1-bar)!important} /* 棒グラフの横の凡例は、棒グラフと同じ濃さのクリア色 */
 /* tiers */
 .t1{background:var(--t1)!important;color:var(--t1-fg)!important}
 .t2{background:var(--t2)!important;color:var(--on)!important}
-.t3{background:var(--t3)!important;color:var(--on)!important}
+.t3{background:var(--t3)!important;color:var(--t3-fg)!important}
 .t4{background:linear-gradient(135deg,var(--t4a),var(--t4b))!important;color:var(--t4-fg)!important}
 /* game cards */
 .games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -210,8 +213,8 @@ button:disabled{cursor:default;opacity:.55}
 .gcard{--h:240;display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;padding:14px 16px;text-decoration:none;color:inherit;transition:transform var(--dur-fast) ease,box-shadow var(--dur-fast) ease}
 .gcard:hover{transform:translateY(-1px)}
 .gcard.skip{opacity:.5}
-.gcard .ring{--c:hsl(var(--h) var(--sat) var(--lit));--sz:54px;--th:9px}
-.gcard .ring>span{font-size:.95rem;color:hsl(var(--h) var(--sat) var(--lit))}
+.gcard .ring{--c:oklch(var(--theme-l) var(--theme-c) var(--h));--sz:54px;--th:9px}
+.gcard .ring>span{font-size:.95rem;color:oklch(var(--theme-l) var(--theme-c) var(--h))}
 .gcard .ttl{font-weight:800;font-size:1rem;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gcard .sub{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gmeta{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px}
@@ -235,10 +238,10 @@ button:disabled{cursor:default;opacity:.55}
 .back{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;padding:8px 14px 8px 10px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);color:var(--ink);text-decoration:none;font-size:.85rem;font-weight:700}
 .back svg{width:16px;height:16px}
 .ghead{--h:240;padding:20px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;
-  background:radial-gradient(130% 160% at 0% 0%,hsl(var(--h) var(--sat) var(--lit) / .22),transparent 58%),var(--surface)}
+  background:radial-gradient(130% 160% at 0% 0%,oklch(var(--theme-l) var(--theme-c) var(--h) / .22),transparent 58%),var(--surface)}
 .ghead h1{font-size:1.7rem}
 .ghead .sub{font-size:.82rem;color:var(--muted)}
-.ghead .ring{--c:hsl(var(--h) var(--sat) var(--lit));--sz:72px;--th:11px}
+.ghead .ring{--c:oklch(var(--theme-l) var(--theme-c) var(--h));--sz:72px;--th:11px}
 .ghead .ring>span{font-size:1.05rem}
 .gridcard{padding:14px 12px 12px}
 .gridwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -267,7 +270,7 @@ td.c{padding:0}
 .sheet h3{font-size:1.2rem;font-weight:800}
 .seg button[aria-checked="true"][data-base="1"]{color:var(--t1-fg)}
 .seg button[aria-checked="true"][data-base="2"]{background:var(--t2);color:var(--on)}
-.tog.k3[aria-pressed="true"] .ck{background:var(--t3);color:var(--on)}
+.tog.k3[aria-pressed="true"] .ck{background:var(--t3);color:var(--t3-fg)}
 .tog.k4[aria-pressed="true"] .ck{background:linear-gradient(135deg,var(--t4a),var(--t4b));color:var(--t4-fg)}
 .two{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
 .sheet-foot{display:flex;justify-content:space-between;align-items:center;gap:8px}

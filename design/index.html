@@ -22,7 +22,7 @@
   --surface:#ffffff;     /* カードの面 */
   --surface-2:#eceef6;   /* カードの中の一段沈んだ面（ボタン、入力欄、未記録のマス） */
   --ink:#10131f;         /* 本文 */
-  --muted:#666d86;       /* 補足・ラベル */
+  --muted:#5d6480;       /* 補足・ラベル */
   --line:#e1e4ee;        /* 区切り線 */
 
   /* アクセント（主ボタン、選択中、フォーカス枠） */
@@ -30,17 +30,19 @@
   --accent-ink:#ffffff;  /* アクセントの上に載せる文字 */
 
   /* 状態（保存済み・処理中・エラー）。アクセントとは別に使う */
-  --ok:#1a9e6a; --warn:#d99512; --err:#d94444;
+  --ok:#1a9e6a; --warn:#b07800; --err:#c73838;
 
   /* 達成段階: クリア < ノーコン < NB/NM < NMNB */
-  --t1:#dde1f1; --t1-fg:#38405f;   /* クリア */
+  --t1:#dde1f1; --t1-fg:#38405f;   /* クリア（マス） */
+  --t1-bar:#8f98cd;                 /* クリア（棒グラフと、その凡例。マスの色だと背景に溶けるため一段濃い） */
   --t2:#5856ef;                     /* ノーコン */
-  --t3:#cf3f9c;                     /* NB / NM */
+  --t3:#c2338f; --t3-fg:#ffffff;   /* NB / NM（ダークでは明るいピンクに濃い文字） */
   --t4a:#f6b443; --t4b:#ee6a3a; --t4-fg:#2a1405;  /* NMNB（グラデーション） */
-  --on:#ffffff;                     /* t2・t3 の上の文字 */
+  --on:#ffffff;                     /* t2 の上の文字 */
 
-  /* 作品のテーマ色: hsl(var(--h) var(--sat) var(--lit))。--h は games.json の hue */
-  --sat:70%; --lit:54%;
+  /* 作品のテーマ色: oklch(var(--theme-l) var(--theme-c) var(--h))。--h は games.json の hue。
+     OKLCH は人の目の明るさに合わせた表し方なので、色相が違っても文字の読みやすさがそろう */
+  --theme-l:.52; --theme-c:.14;   /* 明るさ・鮮やかさ（白いカードの上でコントラスト比 4.8 以上） */
   --ring-track:#e5e7f1;  /* 進捗リングの未達部分 */
 
   /* 影と幕 */
@@ -79,8 +81,8 @@
   --bg:#0a0b11; --surface:#13151e; --surface-2:#1c1f2c; --ink:#eceef7; --muted:#8b91a9; --line:#252a3a;
   --accent:#8a89ff; --accent-ink:#0a0b11;
   --ok:#36c48a; --warn:#f0b33a; --err:#f06464;
-  --t1:#2a2f46; --t1-fg:#d0d5ef; --t2:#6866ff; --t3:#de56b0; --t4a:#f7bd55; --t4b:#f07b46; --t4-fg:#2a1405; --on:#ffffff;
-  --sat:72%; --lit:62%; --ring-track:#232739;
+  --t1:#2a2f46; --t1-fg:#d0d5ef; --t1-bar:#4b5480; --t2:#5654e6; --t3:#e266b8; --t3-fg:#22061a; --t4a:#f7bd55; --t4b:#f07b46; --t4-fg:#2a1405; --on:#ffffff;
+  --theme-l:.72; --theme-c:.13; --ring-track:#232739;
   --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 12px 32px -18px rgba(0,0,0,.7);
   --scrim:rgba(0,0,0,.6);
   color-scheme:dark;
@@ -90,8 +92,8 @@
   --bg:#0a0b11; --surface:#13151e; --surface-2:#1c1f2c; --ink:#eceef7; --muted:#8b91a9; --line:#252a3a;
   --accent:#8a89ff; --accent-ink:#0a0b11;
   --ok:#36c48a; --warn:#f0b33a; --err:#f06464;
-  --t1:#2a2f46; --t1-fg:#d0d5ef; --t2:#6866ff; --t3:#de56b0; --t4a:#f7bd55; --t4b:#f07b46; --t4-fg:#2a1405; --on:#ffffff;
-  --sat:72%; --lit:62%; --ring-track:#232739;
+  --t1:#2a2f46; --t1-fg:#d0d5ef; --t1-bar:#4b5480; --t2:#5654e6; --t3:#e266b8; --t3-fg:#22061a; --t4a:#f7bd55; --t4b:#f07b46; --t4-fg:#2a1405; --on:#ffffff;
+  --theme-l:.72; --theme-c:.13; --ring-track:#232739;
   --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 12px 32px -18px rgba(0,0,0,.7);
   --scrim:rgba(0,0,0,.6);
   color-scheme:dark;
@@ -188,8 +190,8 @@ code{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:.86em
 .sw .hex{font-family:var(--f-num);font-variant-numeric:tabular-nums}
 .hues{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:var(--sp-3)}
 .hue{display:flex;align-items:center;gap:10px;min-width:0}
-.hue .ring{--sz:40px;--th:7px;--p:72;--c:hsl(var(--h) var(--sat) var(--lit))}
-.hue .ring>span{font-size:.72rem;color:hsl(var(--h) var(--sat) var(--lit))}
+.hue .ring{--sz:40px;--th:7px;--p:72;--c:oklch(var(--theme-l) var(--theme-c) var(--h))}
+.hue .ring>span{font-size:.72rem;color:oklch(var(--theme-l) var(--theme-c) var(--h))}
 .hue div{min-width:0;font-size:var(--fs-xs);line-height:1.4}
 .hue div b{display:block;font-size:var(--fs-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .scale{display:flex;flex-direction:column}
@@ -206,7 +208,7 @@ code{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:.86em
 .demo{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
 .t1{background:var(--t1);color:var(--t1-fg)}
 .t2{background:var(--t2);color:var(--on)}
-.t3{background:var(--t3);color:var(--on)}
+.t3{background:var(--t3);color:var(--t3-fg)}
 .t4{background:linear-gradient(135deg,var(--t4a),var(--t4b));color:var(--t4-fg)}
 .rules{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px;font-size:var(--fs-md)}
 pre{margin:0;overflow-x:auto;background:var(--surface-2);border-radius:var(--r-md);padding:var(--sp-3) 14px;font-size:.8rem;line-height:1.6}
@@ -239,7 +241,7 @@ pre code{background:none;padding:0}
 
   <section class="sec">
     <h2>作品のテーマ色</h2>
-    <p><code>data/games.json</code> の <code>hue</code>（色相）から <code>hsl(var(--h) var(--sat) var(--lit))</code> で作ります。彩度と明度はトークンなので、ダークでは少し明るくなります。</p>
+    <p><code>data/games.json</code> の <code>hue</code>（色相）から <code>oklch(var(--theme-l) var(--theme-c) var(--h))</code> で作ります。彩度と明度はトークンなので、ダークでは少し明るくなります。</p>
     <div class="card group"><div class="hues" id="hues"></div></div>
   </section>
 
@@ -358,7 +360,7 @@ const COLORS=[
   {h:"面と文字",items:[["--bg","ページの地"],["--surface","カードの面"],["--surface-2","沈んだ面（ボタン、入力欄）"],["--ink","本文"],["--muted","補足・ラベル"],["--line","区切り線"]]},
   {h:"アクセント",items:[["--accent","主ボタン、選択中、フォーカス枠"],["--accent-ink","アクセントの上の文字"]]},
   {h:"状態",items:[["--ok","保存済み"],["--warn","処理中"],["--err","エラー、削除"]]},
-  {h:"達成段階",items:[["--t1","クリア"],["--t2","ノーコン"],["--t3","NB / NM"],["--t4a","NMNB（始点）"],["--t4b","NMNB（終点）"]]}
+  {h:"達成段階",items:[["--t1","クリア（マス）"],["--t1-bar","クリア（棒グラフ）"],["--t2","ノーコン"],["--t3","NB / NM"],["--t4a","NMNB（始点）"],["--t4b","NMNB（終点）"]]}
 ];
 const SPACE=[["--sp-1","4px"],["--sp-2","8px"],["--sp-3","12px"],["--sp-4","16px"],["--sp-5","20px"],["--sp-6","28px"],["--sp-7","40px"]];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
