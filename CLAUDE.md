@@ -12,4 +12,5 @@
 ## 東方クリア表
 - 保存先は 2 通り: Claude のアーティファクト内では `window.claude.use("db")`（コレクション `games`、1 作品 1 ドキュメント）、それ以外は localStorage（キー `touhou-stg-tools:clear-tracker:v1`）。
 - 記録の形式（cells / hidden / skip、バックアップ JSON の `app: "touhou-clear"`）は Google ドライブへの定期バックアップと復元機能が依存しているので、変えるときは互換を保つ。
+- マスの達成日は `dates`（`c` / `cc` / `nb` / `nm` / `nmnb` / `x:<フラグ名>` → `YYYY-MM-DD`）に達成ごとに持つ。`date` は旧形式との互換用に最新の達成日を入れ続ける。`dates` が無い旧データは `date` を最初の達成の日付として扱う。
 - Claude のアーティファクトへ反映するときは `python scripts/export_artifact.py clear-tracker` の出力（`dist/clear-tracker.html`）を既存アーティファクトの URL に公開する。
