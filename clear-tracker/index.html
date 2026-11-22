@@ -194,7 +194,18 @@ td.c{padding:0}
 .drow input{font:inherit;font-size:16px;color:var(--ink);background:transparent;border:1px solid transparent;border-radius:var(--r-md);padding:8px 10px}
 .drow input:focus{border-color:var(--accent);outline:none}
 .hint{margin:0;font-size:.8rem;color:var(--muted)}
-.lbl small{font-weight:400;letter-spacing:0;margin-left:6px}
+.memo-new{gap:8px}
+.memo-act{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.btn.sm{min-height:34px;padding:6px 14px;font-size:.8rem}
+.notes{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.note{background:var(--surface-2);border-radius:var(--r-md);padding:8px 8px 10px 12px;display:flex;flex-direction:column;gap:6px}
+.nhead{display:flex;align-items:center;gap:4px;font-size:.74rem;color:var(--muted)}
+.nhead .at{flex:1;min-width:0;font-family:var(--f-num)}
+.nbtn{font-size:.76rem;font-weight:700;color:var(--muted);padding:4px 8px;border-radius:8px;min-height:30px}
+.nbtn.del,.nbtn.danger{color:var(--err)}
+.note p{margin:0;padding-right:4px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.92rem}
+.note .field textarea{background:var(--surface)}
+.nconf{display:flex;align-items:center;justify-content:flex-end;gap:4px;font-size:.8rem}
 .sheet-foot{display:flex;justify-content:space-between;align-items:center;gap:8px}
 @media (prefers-reduced-motion:no-preference){
   .sheet{animation:up .22s cubic-bezier(.2,.8,.2,1)}
@@ -269,6 +280,21 @@ function datesOf(c,d){
   return out}
 const latest=ds=>Object.values(ds).filter(Boolean).sort().pop();
 const dkLabel=(k,d)=>k.startsWith("x:")?k.slice(2):(k==="cc"&&isEx(d)?"クリア":DL[k]);
+/* メモ: c.notes = [{id, at:"YYYY-MM-DDTHH:MM", text, edited?}]。c.note は全メモをつないだ文字列(旧形式・CSV用) */
+const nowStamp=()=>{const d=new Date();return today()+"T"+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")};
+const fmtAt=a=>a?a.replace(/-/g,"/").replace("T"," "):"";
+const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function notesOf(c){
+  if(Array.isArray(c.notes))return c.notes.filter(n=>n&&typeof n==="object").map(n=>Object.assign({},n));
+  if(!c.note)return[];
+  const out=[];let n=null; // 旧形式: 行頭の日付 (YYYY/MM/DD) ごとに分ける
+  for(const line of String(c.note).split("\n")){const m=line.match(/^(\d{4})\/(\d{2})\/(\d{2})(?: (\d{2}:\d{2}))?(?:\s+(.*))?$/);
+    if(m){n={id:"old"+out.length,at:`${m[1]}-${m[2]}-${m[3]}`+(m[4]?"T"+m[4]:""),text:m[5]||""};out.push(n)}
+    else if(n)n.text+="\n"+line;
+    else{n={id:"old"+out.length,at:"",text:line};out.push(n)}}
+  return out.map(q=>Object.assign(q,{text:q.text.trim()})).filter(q=>q.text)}
+const byAt=(a,b)=>(a.at||"").localeCompare(b.at||"");
+const notesText=ns=>ns.slice().sort(byAt).map(n=>(n.at?fmtAt(n.at)+" ":"")+n.text).join("\n");
 
 /* ---------- save queue ---------- */
 const dirty=new Set(),writing=new Set(),timers={},retried={};
@@ -369,8 +395,13 @@ function renderGame(g){
 /* ---------- sheet ---------- */
 let cur=null;
 const baseOf=c=>c.cc?2:c.c?1:0;
-function openSheet(gid,s,d){cur={gid,s,d};renderSheet()}
-function closeSheet(){cur=null;$("#sheetRoot").innerHTML="";render(true)}
+let editing=null,delAsk=null,clrAsk=false;
+function openSheet(gid,s,d){cur={gid,s,d};editing=delAsk=null;clrAsk=false;renderSheet()}
+function closeSheet(){
+  if(cur&&writable()){ // 保存し忘れた書きかけ・編集中のメモは閉じるときに保存する
+    const ed=editing&&document.querySelector(`[data-edit="${CSS.escape(editing)}"]`);if(ed)saveEdit(editing,ed.value);
+    const fn=$("#fNote");if(fn&&fn.value.trim())addNote(fn.value)}
+  cur=null;editing=delAsk=null;clrAsk=false;$("#sheetRoot").innerHTML="";render(true)}
 function renderSheet(){
   if(!cur){$("#sheetRoot").innerHTML="";return}
   const g=GI[cur.gid],c=cell(cur.gid,cur.s,cur.d),ex=isEx(cur.d),dis=writable()?"":"disabled";
@@ -385,7 +416,9 @@ function renderSheet(){
     <div><div class="lbl">縛り</div><div class="togs">${cons}</div></div>
     ${fl?`<div><div class="lbl">ルート・モード</div><div class="togs">${fl}</div></div>`:""}
     <div class="two"><div><div class="lbl">達成日</div><div class="dates" id="dateRows" data-sig="${esc(dateSig(c))}">${dateRows(c,cur.d,dis)}</div></div>
-    <label class="field" for="fNote"><span class="lbl">メモ<small>書き始めると今日の日付が入ります</small></span><textarea id="fNote" placeholder="スコア、残機、リプレイの保存場所など" ${dis}>${esc(c.note||"")}</textarea></label></div>
+    <div><label class="lbl" for="fNote">メモ</label><div class="field memo-new"><textarea id="fNote" placeholder="スコア、残機、リプレイの保存場所など" ${dis}></textarea>
+      <div class="memo-act"><span class="hint">保存すると日時が付き、1件ずつ残ります</span><button type="button" class="btn primary sm" id="addNote" disabled>メモを保存</button></div></div>
+      <div class="notes" id="noteList" data-sig="${esc(noteSig(c))}">${noteItems(c,dis)}</div></div></div>
     <div class="sheet-foot"><button type="button" class="btn danger" id="clrCell" ${dis}>このマスを消去</button><button type="button" class="btn primary" id="closeSheet">完了</button></div>
   </div></div>`;
 }
@@ -393,25 +426,43 @@ function dateRows(c,d,dis){const ds=datesOf(c,d),ks=shownKeys(c,d);
   if(!ks.length)return`<p class="hint">到達や縛りを選ぶと、その日の日付が入ります。</p>`;
   return ks.map(k=>`<label class="drow"><span>${esc(dkLabel(k,d))}</span><input type="date" data-dk="${esc(k)}" value="${esc(ds[k]||"")}" aria-label="${esc(dkLabel(k,d))}の達成日" ${dis}></label>`).join("")}
 const dateSig=c=>JSON.stringify([cur.d,shownKeys(c,cur.d),datesOf(c,cur.d),writable()]);
+function noteItems(c,dis){const ns=notesOf(c).sort(byAt).reverse();
+  return ns.map(n=>{const id=esc(n.id),at=n.at?esc(fmtAt(n.at)):"以前のメモ",ed=n.edited?` · ${esc(fmtAt(n.edited))} 編集`:"";
+    if(editing===n.id)return`<div class="note"><div class="nhead"><span class="at">${at}${ed}</span></div><div class="field"><textarea data-edit="${id}" aria-label="${at}のメモを編集" ${dis}>${esc(n.text)}</textarea></div>
+      <div class="nconf"><button type="button" class="nbtn" data-ncancel="${id}">やめる</button><button type="button" class="btn primary sm" data-nsave="${id}" ${dis}>保存</button></div></div>`;
+    const tail=delAsk===n.id?`<div class="nconf"><span class="muted">このメモを削除しますか？</span><button type="button" class="nbtn" data-ncancel="${id}">やめる</button><button type="button" class="nbtn danger" data-ndelok="${id}" ${dis}>削除する</button></div>`:"";
+    return`<div class="note"><div class="nhead"><span class="at">${at}${ed}</span><button type="button" class="nbtn" data-nedit="${id}" ${dis}>編集</button><button type="button" class="nbtn del" data-ndel="${id}" ${dis}>削除</button></div><p>${esc(n.text)}</p>${tail}</div>`}).join("")}
+const noteSig=c=>JSON.stringify([notesOf(c),editing,delAsk,writable()]);
+function refreshNotes(force){const nl=$("#noteList");if(!nl||!cur)return;const c=cell(cur.gid,cur.s,cur.d),sig=noteSig(c);
+  const typing=document.activeElement&&document.activeElement.tagName==="TEXTAREA"&&nl.contains(document.activeElement);
+  if(force||(nl.dataset.sig!==sig&&!typing)){nl.innerHTML=noteItems(c,writable()?"":"disabled");nl.dataset.sig=sig}}
+function addNote(text){text=text.trim();if(!text)return;mutate(c=>{c.notes.push({id:newId(),at:nowStamp(),text})});const fn=$("#fNote");if(fn){fn.value="";$("#addNote").disabled=true}refreshNotes(true);render(true)}
+function saveEdit(id,text){text=text.trim();mutate(c=>{const n=c.notes.find(q=>q.id===id);if(!n)return;
+  if(!text){c.notes=c.notes.filter(q=>q!==n);return}if(n.text!==text){n.text=text;n.edited=nowStamp()}});editing=null;refreshNotes(true);render(true)}
+function delNote(id){mutate(c=>{c.notes=c.notes.filter(q=>q.id!==id)});delAsk=null;refreshNotes(true);render(true)}
 function syncSheet(){
   if(!cur)return;const root=$("#sheetRoot");if(!root.firstElementChild)return renderSheet();
   const c=cell(cur.gid,cur.s,cur.d),dis=!writable(),b=baseOf(c);
   root.querySelectorAll("[data-base]").forEach(el=>el.setAttribute("aria-checked",String(+el.dataset.base===b)));
   root.querySelectorAll("[data-lv]").forEach(el=>el.setAttribute("aria-pressed",String(!!c[el.dataset.lv])));
   root.querySelectorAll("[data-fl]").forEach(el=>el.setAttribute("aria-pressed",String(!!(c.x&&c.x[el.dataset.fl]))));
-  const dr=$("#dateRows"),fn=$("#fNote"),sig=dateSig(c);
+  const dr=$("#dateRows"),sig=dateSig(c);
   if(dr&&dr.dataset.sig!==sig&&!dr.contains(document.activeElement)){dr.innerHTML=dateRows(c,cur.d,dis?"disabled":"");dr.dataset.sig=sig}
-  if(fn&&document.activeElement!==fn&&fn.value!==(c.note||""))fn.value=c.note||"";
-  root.querySelectorAll("[data-base],[data-lv],[data-fl],[data-dk],#fNote,#clrCell").forEach(el=>{el.disabled=dis});
+  refreshNotes();
+  const cb=$("#clrCell");if(cb)cb.textContent=clrAsk?"もう一度押すと、日付・メモも含めて消去":"このマスを消去";
+  root.querySelectorAll("[data-base],[data-lv],[data-fl],[data-dk],#fNote,#clrCell,[data-nedit],[data-ndel],[data-ndelok],[data-nsave],[data-edit]").forEach(el=>{el.disabled=dis});
+  const an=$("#addNote"),fn=$("#fNote");if(an)an.disabled=dis||!(fn&&fn.value.trim());
 }
 const stable=o=>JSON.stringify(o,(k,v)=>v&&typeof v==="object"&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(q=>[q,v[q]])):v);
+const undone={}; // 未に戻した項目の日付。ページを開いている間は、もう一度選ぶと元の日付に戻す
 function mutate(fn){const s=gdoc(cur.gid),k=key(cur.s,cur.d);const c=Object.assign({},s.cells[k]||{});
-  const before=new Set(achievedKeys(c)),orphan=!c.dates&&!!c.date&&!before.size;
-  c.dates=datesOf(c,cur.d);fn(c);
+  const before=new Set(achievedKeys(c)),orphan=!c.dates&&!!c.date&&!before.size,u=undone[cur.gid+"/"+k]=undone[cur.gid+"/"+k]||{};
+  c.dates=datesOf(c,cur.d);c.notes=notesOf(c);fn(c);
   for(const l of LV)if(!c[l])delete c[l];
   const now=achievedKeys(c),t=today();
-  for(const q of now)if(!before.has(q))c.dates[q]=t; // 新しく達成した項目に今日の日付
-  for(const q in c.dates)if(!now.includes(q)||!c.dates[q])delete c.dates[q];
+  for(const q of now)if(!before.has(q)){c.dates[q]=u[q]||t;delete u[q]} // 新しく達成した項目に今日の日付
+  for(const q in c.dates)if(!now.includes(q)||!c.dates[q]){if(c.dates[q])u[q]=c.dates[q];delete c.dates[q]}
+  if(c.notes.length)c.note=notesText(c.notes);else{delete c.notes;delete c.note}
   const last=latest(c.dates);if(last)c.date=last;else if(!orphan)delete c.date;
   if(!Object.keys(c.dates).length)delete c.dates;
   const empty=!tier(c)&&!c.note&&!c.date&&!(c.x&&Object.values(c.x).some(Boolean));
@@ -438,7 +489,7 @@ function exportCsv(){
   const q=v=>{v=String(v??"");return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
   const lines=[["game_id","game","release_year","shot","difficulty","clear","no_continue","no_bomb","no_miss","no_miss_no_bomb","flags","date","note","clear_date","no_continue_date","no_bomb_date","no_miss_date","no_miss_no_bomb_date","flag_dates"].join(",")];
   for(const g of GAMES)for(const d of g.diffs)for(const s of shotsFor(g,d)){const c=cell(g.id,s,d),ds=datesOf(c,d);
-    lines.push([g.id,g.t,g.y,s,DN[d],c.c?1:0,c.cc?1:0,c.nb?1:0,c.nm?1:0,c.nmnb?1:0,Object.keys(c.x||{}).filter(f=>c.x[f]).join(";"),c.date||"",c.note||"",...LV.map(l=>ds[l]||""),Object.keys(ds).filter(k=>k.startsWith("x:")).map(k=>k.slice(2)+"="+ds[k]).join(";")].map(q).join(","))}
+    lines.push([g.id,g.t,g.y,s,DN[d],c.c?1:0,c.cc?1:0,c.nb?1:0,c.nm?1:0,c.nmnb?1:0,Object.keys(c.x||{}).filter(f=>c.x[f]).join(";"),c.date||"",notesText(notesOf(c)),...LV.map(l=>ds[l]||""),Object.keys(ds).filter(k=>k.startsWith("x:")).map(k=>k.slice(2)+"="+ds[k]).join(";")].map(q).join(","))}
   offer("touhou_clear_"+today()+".csv","\uFEFF"+lines.join("\n"),"CSVを書き出しました");
 }
 function exportBackup(){
@@ -490,32 +541,30 @@ document.addEventListener("click",e=>{
   if(t.id==="setBtn"){showSettings=!showSettings;return render(true)}
   if(t.classList.contains("cell")){const g=GI[location.hash.slice(1)];if(g)openSheet(g.id,t.dataset.s,t.dataset.d);return}
   if(!cur)return;
+  if(clrAsk&&t.id!=="clrCell"){clrAsk=false;syncSheet()}
   if(t.dataset.base!==undefined)return setBase(+t.dataset.base);
   if(t.dataset.lv)return toggleLevel(t.dataset.lv);
   if(t.dataset.fl){const f=t.dataset.fl;mutate(c=>{c.x=Object.assign({},c.x||{});if(c.x[f])delete c.x[f];else c.x[f]=true;if(!Object.keys(c.x).length)delete c.x});syncSheet();return render(true)}
-  if(t.id==="clrCell"){const s=gdoc(cur.gid);delete s.cells[key(cur.s,cur.d)];save(cur.gid,0);syncSheet();return render(true)}
+  if(t.id==="addNote")return addNote($("#fNote").value);
+  if(t.dataset.nedit){editing=t.dataset.nedit;delAsk=null;refreshNotes(true);const ta=document.querySelector(`[data-edit="${CSS.escape(editing)}"]`);if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)}return}
+  if(t.dataset.ndel){delAsk=t.dataset.ndel;editing=null;return refreshNotes(true)}
+  if(t.dataset.ndelok)return delNote(t.dataset.ndelok);
+  if(t.dataset.ncancel){editing=delAsk=null;return refreshNotes(true)}
+  if(t.dataset.nsave){const ta=document.querySelector(`[data-edit="${CSS.escape(t.dataset.nsave)}"]`);return saveEdit(t.dataset.nsave,ta?ta.value:"")}
+  if(t.id==="clrCell"){if(!clrAsk){clrAsk=true;return syncSheet()}clrAsk=false;const s=gdoc(cur.gid);delete s.cells[key(cur.s,cur.d)];save(cur.gid,0);editing=delAsk=null;syncSheet();return render(true)}
 });
-document.addEventListener("keydown",e=>{if(e.key!=="Escape"||e.isComposing)return;
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)&&cur&&!e.isComposing){const t=e.target;
+    if(t.id==="fNote"){e.preventDefault();return addNote(t.value)}
+    if(t.dataset&&t.dataset.edit){e.preventDefault();return saveEdit(t.dataset.edit,t.value)}}
+  if(e.key!=="Escape"||e.isComposing)return;
+  if(cur&&editing){editing=null;return refreshNotes(true)}
   if(cur)return closeSheet();
   if(!e.target.closest("input,textarea,select"))backToList()});
 document.addEventListener("input",e=>{
   if(!cur)return;
-  if(e.target.id==="fNote"){const v=e.target.value;mutate(c=>{if(v)c.note=v;else delete c.note})}
+  if(e.target.id==="fNote"){const an=$("#addNote");if(an)an.disabled=!writable()||!e.target.value.trim()}
   if(e.target.dataset.dk){const q=e.target.dataset.dk,v=e.target.value;mutate(c=>{if(v)c.dates[q]=v;else delete c.dates[q]});render(true)}
-});
-/* メモ: 書き始めるときに今日の日付を行頭に入れる。何も書かずに離れたら取り消す */
-const stamp=()=>today().replace(/-/g,"/");
-document.addEventListener("focusin",e=>{
-  const t=e.target;if(t.id!=="fNote"||!cur||t.disabled)return;
-  const v=t.value;if(v.split("\n").some(l=>l.startsWith(stamp())))return;
-  const body=v.replace(/\s+$/,""),nv=(body?body+"\n":"")+stamp()+" ";
-  t.value=nv;t.dataset.auto=nv;
-  setTimeout(()=>{if(document.activeElement===t&&t.value===nv){t.setSelectionRange(nv.length,nv.length);t.scrollTop=t.scrollHeight}},0);
-});
-document.addEventListener("focusout",e=>{
-  const t=e.target;if(t.id!=="fNote"||t.dataset.auto===undefined)return;
-  if(t.value===t.dataset.auto)t.value=cur?cell(cur.gid,cur.s,cur.d).note||"":"";
-  delete t.dataset.auto;
 });
 document.addEventListener("change",e=>{
   const t=e.target;
