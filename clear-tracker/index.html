@@ -235,8 +235,16 @@ button:disabled{cursor:default;opacity:.55}
 .row-btns{display:flex;flex-wrap:wrap;gap:8px}
 .confirm{background:var(--surface-2);border-radius:var(--r-md);padding:12px 14px;display:flex;flex-direction:column;gap:10px;font-size:.86rem}
 /* detail */
-.back{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;padding:8px 14px 8px 10px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);color:var(--ink);text-decoration:none;font-size:.85rem;font-weight:700}
+.back{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;min-height:40px;padding:8px 16px 8px 10px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);color:var(--ink);text-decoration:none;font-size:.85rem;font-weight:700}
 .back svg{width:16px;height:16px}
+.back[hidden]{display:none}
+/* 作品ページ: 上部を「戻る」付きの固定バーにする（スクロールしても常に左上から一覧へ戻れる） */
+.is-detail .top{position:sticky;top:0;z-index:10;flex-wrap:nowrap;background:var(--bg);margin:-20px -16px 0;padding:max(12px,env(safe-area-inset-top,0px)) 16px 12px;transition:box-shadow .15s ease}
+.is-detail .top.scrolled{box-shadow:0 1px 0 var(--line),0 8px 20px -14px rgba(0,0,0,.35)}
+.is-detail .brand{display:none}
+.top .here{display:none;min-width:0;flex:1;font-weight:800;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .15s ease}
+.is-detail .top .here{display:block}
+.is-detail .top.scrolled .here{opacity:1}
 .ghead{--h:240;padding:20px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;
   background:radial-gradient(130% 160% at 0% 0%,oklch(var(--theme-l) var(--theme-c) var(--h) / .22),transparent 58%),var(--surface)}
 .ghead h1{font-size:1.7rem}
@@ -286,13 +294,15 @@ td.c{padding:0}
 <body>
 
 <div class="wrap" id="app">
-  <div class="top">
-    <div>
+  <header class="top" id="top">
+    <a class="back" id="backLink" href="#" hidden aria-keyshortcuts="Escape"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>作品一覧</a>
+    <div class="brand">
       <div class="eyebrow">Touhou Project</div>
       <h1>東方クリア表</h1>
     </div>
+    <div class="here" id="here" aria-hidden="true"></div>
     <div class="pill" id="status" data-k="busy" aria-live="polite"><i></i><span>読み込み中</span></div>
-  </div>
+  </header>
   <div id="view" class="sec" style="gap:20px"></div>
 </div>
 <div id="sheetRoot"></div>
@@ -419,7 +429,6 @@ function renderGame(g){
     <div><h3>表示する機体</h3><div class="optrow">${allShots.map((v,i)=>`<label class="opt"><input type="checkbox" id="hs-${i}" data-hs="${esc(v)}" ${s.hidden.shots.includes(v)?"":"checked"} ${dis}>${esc(v)}</label>`).join("")}</div></div>
     <label class="opt" style="align-self:flex-start"><input type="checkbox" id="skipG" ${s.skip?"checked":""} ${dis}>この作品を全体の集計から外す</label></div>`:"";
   $("#view").innerHTML=`
-  <a class="back" href="#"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>作品一覧</a>
   ${notice()}
   <section class="card ghead" style="--h:${g.h}"><div style="min-width:0"><div class="eyebrow">No.${esc(g.no)} · ${g.y}</div><h1>${esc(g.t)}</h1><div class="sub">${esc(g.en)}</div><div class="sub num" style="margin-top:6px">ノーコン以上 ${c.done} / ${c.n}</div></div><div class="ring" style="--p:${p}"><span class="num">${p}%</span></div></section>
   ${legend()}
@@ -522,8 +531,17 @@ function doRestore(){
 }
 
 /* ---------- routing & events ---------- */
-function render(keepScroll){const g=GI[location.hash.slice(1)];const y=window.scrollY;if(g)renderGame(g);else renderOverview();if(keepScroll)window.scrollTo(0,y)}
-window.addEventListener("hashchange",()=>{showSettings=false;cur=null;$("#sheetRoot").innerHTML="";render();window.scrollTo(0,0)});
+const curGame=()=>GI[location.hash.slice(1)];
+let shown=null; // 今描画している作品（一覧なら null）
+function render(keepScroll){const g=curGame();const y=window.scrollY;shown=g||null;
+  document.body.classList.toggle("is-detail",!!g);$("#backLink").hidden=!g;$("#here").textContent=g?g.t:"";
+  if(g)renderGame(g);else renderOverview();if(keepScroll)window.scrollTo(0,y);onScroll()}
+/* 一覧のスクロール位置を覚えておき、作品ページから戻ったときに元の場所へ戻す */
+let listY=0;
+function onScroll(){if(!shown)listY=window.scrollY;$("#top").classList.toggle("scrolled",!!shown&&window.scrollY>8)}
+window.addEventListener("scroll",onScroll,{passive:true});
+window.addEventListener("hashchange",()=>{showSettings=false;cur=null;$("#sheetRoot").innerHTML="";const y=listY;render();window.scrollTo(0,curGame()?0:y);onScroll()});
+function backToList(){if(curGame())location.hash=""}
 document.addEventListener("click",e=>{
   const t=e.target.closest("button,#scrim");if(!t)return;
   if(t.id==="scrim"||t.id==="closeSheet")return closeSheet();
@@ -540,7 +558,9 @@ document.addEventListener("click",e=>{
   if(t.dataset.fl){const f=t.dataset.fl;mutate(c=>{c.x=Object.assign({},c.x||{});if(c.x[f])delete c.x[f];else c.x[f]=true});syncSheet();return render(true)}
   if(t.id==="clrCell"){const s=gdoc(cur.gid);delete s.cells[key(cur.s,cur.d)];save(cur.gid,0);syncSheet();return render(true)}
 });
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&cur)closeSheet()});
+document.addEventListener("keydown",e=>{if(e.key!=="Escape"||e.isComposing)return;
+  if(cur)return closeSheet();
+  if(!e.target.closest("input,textarea,select"))backToList()});
 document.addEventListener("input",e=>{
   if(!cur)return;
   if(e.target.id==="fNote"){const v=e.target.value;mutate(c=>{if(v)c.note=v;else delete c.note})}
